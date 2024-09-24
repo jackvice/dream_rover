@@ -202,7 +202,7 @@ def make_replay(config, directory=None, is_eval=False, rate_limit=False):
 
 
 
-def make_env(config: embodied.Config, index: int, **overrides):
+def make_env(config: embodied.Config, index: int, **overrides) -> embodied.envs.Environment:
     """
     Create the environment based on the task and suite defined in the configuration.
 
@@ -250,7 +250,7 @@ def make_env(config: embodied.Config, index: int, **overrides):
     return wrap_env(env, config)
 
 
-def wrap_env(env, config: embodied.Config):
+def wrap_env(env: embodied.envs.Environment, config: embodied.Config) -> embodied.envs.Environment:
     """
     Wrap the environment with additional features like normalization, time limits, etc.
     

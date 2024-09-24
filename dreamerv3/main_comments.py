@@ -250,7 +250,7 @@ def make_env(config: embodied.Config, index: int, **overrides):
     return wrap_env(env, config)
 
 
-def wrap_env(env, config: embodied.Config):
+def wrap_env(env: embodied.envs.Environment, config: embodied.Config):
     """
     Wrap the environment with additional features like normalization, time limits, etc.
     
