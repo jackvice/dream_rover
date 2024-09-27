@@ -145,6 +145,41 @@ defaults:
   slowreg: 1.0
   slowtar: False
 
+
+  enc_bip: # bipedal walker
+    spaces: '.*'
+    typ: 'simple'
+    simple:
+      layers: 4
+      units: 400
+      act: silu
+      depth: 32
+      mults: [1, 2, 4, 8]
+      kernel: 4
+      minres: 4
+      norm: rms
+      winit: normal
+      symlog: True
+      outer: True
+  dec_bip: # bipedal walker
+    spaces: '.*'
+    typ: 'simple'
+    simple:
+      inputs: [deter, stoch]
+      layers: 4
+      units: 400
+      act: silu
+      depth: 32
+      mults: [1, 2, 4, 8]
+      kernel: 4
+      minres: 4
+      norm: rms
+      winit: normal
+      outscale: 0.1
+      symlog: True
+      outer: True
+
+  
 size12m: &size12m
   dyn.rssm: {deter: 2048, hidden: 256, classes: 16}
   .*\.depth: 16
@@ -188,6 +223,7 @@ dmlab:
   dec.spaces: 'image|instr'
   run:
     steps: 2.6e7
+    num_envs: 1
 
 atari:
   task: atari_pong
@@ -262,6 +298,87 @@ memmaze:
   enc.spaces: 'image'
   dec.spaces: 'image'
 
+bipedalwalker:
+  task: gym_BipedalWalker-v3
+  enc:
+    spaces: 'image'
+    typ: simple
+    simple:
+      layers: 3
+      units: 256
+      act: relu
+      depth: 0
+      #mults: []
+      kernel: 1
+      minres: 1
+      norm: none
+      winit: orthogonal
+  dec:
+    spaces: 'image'
+    typ: simple
+    simple:
+      inputs: [deter, stoch]
+      layers: 3
+      units: 256
+      act: relu
+      depth: 0
+      #mults: []
+      kernel: 1
+      minres: 1
+      norm: none
+      winit: orthogonal
+  actor_dist_cont: tanh_normal  # Or 'normal' depending on your agent's implementation
+  actor:
+    layers: 3
+    units: 256
+    act: relu
+    norm: none
+    minstd: 0.1
+    maxstd: 1.0
+    outscale: 0.01
+    inputs: [deter, stoch]
+    winit: orthogonal
+  run:
+    train_ratio: 64
+    steps: 1e6
+    num_envs: 16
+    log_every: 1000
+    save_every: 5000
+    eval_every: 2000
+    eval_initial: True
+    eval_eps: 1
+  opt:
+    lr: 3e-4  # Adjust the learning rate if necessary
+
+  
+mountaincar:
+  task: gym_MountainCar-v0
+  run:
+    script: train
+    train_ratio: 32
+    steps: 100000
+    num_envs: 1
+    log_every: 1000
+    save_every: 5000
+    eval_every: 2000
+    eval_initial: True
+    eval_eps: 1
+  enc:
+    spaces: 'observation'
+    typ: mlp
+    mlp:
+      layers: 2
+      units: 128
+      act: relu
+  dec:
+    spaces: 'observation'
+    typ: mlp
+    mlp:
+      layers: 2
+      units: 128
+      act: relu
+
+  
 multicpu:
   jax:
     logical_cpus: 8
@@ -272,6 +389,7 @@ multicpu:
     actor_batch: 4
   batch_size: 12
 
+  
 debug:
   jax: {debug: True, jit: True, prealloc: False, platform: cpu, compute_dtype: bfloat16, profiler: False, checks: False}
   wrapper: {length: 100, checks: True}

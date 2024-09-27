@@ -1,5 +1,3 @@
-from embodied import wrappers
-import embodied
 import importlib
 import os
 import pathlib
@@ -18,6 +16,11 @@ warnings.filterwarnings('ignore', '.*is a deprecated alias for.*')
 warnings.filterwarnings('ignore', '.*truncated to dtype int32.*')
 
 
+import embodied
+from embodied import wrappers
+from embodied.envs import from_gym
+
+
 def main(argv: list = None) -> None:
     """
     Main entry point for running different training and evaluation modes for the agent.
@@ -34,6 +37,7 @@ def main(argv: list = None) -> None:
     # Parse command-line flags and load the default configuration
     parsed, other = embodied.Flags(configs=['defaults']).parse_known(argv)
     config = embodied.Config(agt.Agent.configs['defaults'])
+
 
     # Update config with additional specified configs
     for name in parsed.configs:
@@ -57,6 +61,8 @@ def main(argv: list = None) -> None:
     
     print('Run script:', args.script)
     print('Logdir:', args.logdir)
+    print('Args:', args)
+
 
     # Create the logging directory if required
     logdir = embodied.Path(args.logdir)
@@ -215,8 +221,7 @@ def make_env(config: embodied.Config, index: int, **overrides):
         An instance of the environment.
     """
     suite, task = config.task.split('_', 1)
-    if suite == 'memmaze':
-        from embodied.envs import from_gym
+    if suite == 'memmaze' or suite == 'ant':
         import memory_maze  # noqa
     ctor = {
         'dummy': 'embodied.envs.dummy:Dummy',
@@ -235,6 +240,7 @@ def make_env(config: embodied.Config, index: int, **overrides):
         'bsuite': 'embodied.envs.bsuite:BSuite',
         'memmaze': lambda task, **kw: from_gym.FromGym(
             f'MemoryMaze-{task}-ExtraObs-v0', **kw),
+        #'m_car': from_gym.FromGym('MountainCar-v0'),
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(':')
