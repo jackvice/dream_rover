@@ -555,7 +555,17 @@ class Agent(nj.Module):
 
         return metrics, carry_out
 
-    def preprocess(self, obs):
+
+    def preprocess(self, obs: dict) -> dict:
+        """
+        Preprocess the observations before feeding them into the network.
+        
+        Args:
+            obs: Dictionary containing the raw observations from the environment.
+
+        Returns:
+            A dictionary of preprocessed observations.
+        """
         spaces = {**self.obs_space, **self.act_space, **self.aux_spaces}
         result = {}
         for key, value in obs.items():

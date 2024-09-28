@@ -1,0 +1,50 @@
+import gym
+import numpy as np
+
+class Acrobot:
+    def __init__(self, action_repeat=1):
+        self._env = gym.make('Acrobot-v1')
+        self._action_repeat = action_repeat
+
+    @property
+    def observation_space(self):
+        return gym.spaces.Dict({
+            'state': self._env.observation_space,
+            'is_first': gym.spaces.Box(0, 1, (), dtype=bool),
+            'is_terminal': gym.spaces.Box(0, 1, (), dtype=bool),
+        })
+
+    @property
+    def action_space(self):
+        return self._env.action_space
+
+    def step(self, action):
+        total_reward = 0.0
+        for _ in range(self._action_repeat):
+            obs, reward, done, info = self._env.step(action)
+            total_reward += reward
+            if done:
+                break
+        
+        obs_dict = {
+            'state': obs,
+            'is_first': False,
+            'is_terminal': done,
+        }
+        return obs_dict, total_reward, done, info
+
+    def reset(self):
+        obs = self._env.reset()
+        obs_dict = {
+            'state': obs,
+            'is_first': True,
+            'is_terminal': False,
+        }
+        return obs_dict
+
+    def render(self, mode='human'):
+        return self._env.render(mode=mode)
+
+    def close(self):
+        self._env.close()
+

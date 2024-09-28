@@ -14,6 +14,78 @@ cast = jaxutils.cast_to_compute
 
 
 class RSSM(nj.Module):
+  """
+  Recurrent State-Space Model (RSSM) class for DreamerV3, which models
+  the latent dynamics of the environment using both deterministic and
+  stochastic components. The RSSM is used for encoding observations,
+  predicting future states, and calculating the model loss for training.
+
+  Attributes:
+  -----------
+  deter: int
+      Size of the deterministic latent state.
+  hidden: int
+      Size of the hidden layer in the network.
+  stoch: int
+      Size of the stochastic latent state.
+  classes: int
+      Number of classes for the categorical distribution over the latent state.
+  norm: str
+      Type of normalization to apply (e.g., 'rms' for root mean square).
+  act: str
+      Activation function to use (e.g., 'gelu').
+  unroll: bool
+      Whether to unroll the recurrent model over a sequence of time steps.
+  unimix: float
+      Mixing factor for adding uniform noise to the output distribution.
+  outscale: float
+      Scaling factor for the output layer.
+  imglayers: int
+      Number of layers for processing image embeddings.
+  obslayers: int
+      Number of layers for processing observation embeddings.
+  dynlayers: int
+      Number of layers for processing dynamics embeddings.
+  absolute: bool
+      Whether to use absolute or relative feature embeddings.
+  cell: str
+      Type of recurrent cell to use (e.g., 'gru', 'mgu', 'stack').
+  blocks: int
+      Number of blocks to divide the latent state for block-based processing.
+  block_fans: bool
+      Whether to use block-based parameter sharing for efficient computation.
+  block_norm: bool
+      Whether to apply normalization to each block.
+  
+  Methods:
+  --------
+  initial(bsize: int) -> dict:
+      Initialize the recurrent model state with zero values for the given
+      batch size.
+  
+  observe(carry: dict, action: jnp.ndarray, embed: jnp.ndarray,
+          reset:jnp.ndarray, bdims: int = 2) -> tuple:
+      Process a sequence of observations and actions, updating the recurrent
+      state.
+  
+  imagine(carry: dict, action: jnp.ndarray, bdims: int = 2) -> tuple:
+      Predict future states by imagining the outcome of actions without observations.
+  
+  loss(outs: dict, free: float = 1.0) -> tuple:
+      Calculate the loss for training, including dynamics and representation loss.
+  
+  _prior(feat: jnp.ndarray) -> jnp.ndarray:
+      Compute the prior over future states based on the current features.
+  
+  _gru(deter: jnp.ndarray, stoch: jnp.ndarray, action: jnp.ndarray) -> tuple:
+      Update the recurrent state using a GRU or other specified recurrent cell.
+  
+  _logit(name: str, x: jnp.ndarray) -> jnp.ndarray:
+      Compute logits (unnormalized predictions) for the latent state.
+  
+  _dist(logit: jnp.ndarray) -> tfd.Independent:
+      Return a probability distribution based on the predicted logits.
+  """
 
   deter: int = 4096
   hidden: int = 2048
@@ -242,8 +314,12 @@ class SimpleEncoder(nj.Module):
     self.imginp = Input(self.imgkeys, featdims=3)
     self.depths = tuple(self.depth * mult for mult in self.mults)
     self.kw = kw
-
+    print('__init__ Encoder vector keys:', self.veckeys)
+    print('__init__ Encoder image keys:', self.imgkeys)
+    
   def __call__(self, data, bdims=2):
+    #print('__call__ Encoder vector keys:', self.veckeys)
+    #print('__call__ Encoder image keys:', self.imgkeys)
     kw = dict(**self.kw, norm=self.norm, act=self.act)
     outs = []
 
