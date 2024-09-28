@@ -6,6 +6,7 @@ from . import distr
 from . import envs
 from . import replay
 from . import run
+from .envs.turtlebot import Turtlebot
 
 try:
   from rich import traceback

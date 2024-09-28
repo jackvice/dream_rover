@@ -1,0 +1,54 @@
+import rclpy
+from geometry_msgs.msg import Twist
+
+
+
+
+class Turtlebot(embodied.Env):
+    def __init__(self, task, size=(64, 64), length=100):
+        super().__init__()
+        self.publisher = None
+        rclpy.init()
+        self.node = rclpy.create_node('turtlebot_controller')
+        self.publisher = self.node.create_publisher(Twist, '/cmd_vel', 10)
+
+    def step(self, action):
+        if action['reset'] or self._done:
+            self._step = 0
+            self._done = False
+            return self._obs(0, is_first=True)
+
+        twist = Twist()
+        twist.linear.x = action['linear_velocity']
+        twist.angular.z = action['angular_velocity']
+        self.publisher.publish(twist)
+
+        self._step += 1
+        self._done = (self._step >= self._length)
+        return self._obs(1, is_last=self._done, is_terminal=self._done)
+
+    @property
+    def act_space(self):
+        return {
+            'action': embodied.Space(np.float32, (), 0, 2),
+            'other': embodied.Space(np.float32, (6,)),
+            'reset': embodied.Space(bool),
+        }
+
+    @property
+    def obs_space(self):
+        return {
+            'lidar': embodied.Space(np.float32, (270,))
+            'is_first': embodied.Space(bool),
+            'is_last': embodied.Space(bool),
+            'is_terminal': embodied.Space(bool),
+        }
+    
+    def _obs(self, reward, is_first=False, is_last=False, is_terminal=False):
+        return dict(
+            lidar=np.zeros(270, np.float32),
+            reward=np.float32(reward),
+            is_first=is_first,
+            is_last=is_last,
+            is_terminal=is_terminal,
+        )

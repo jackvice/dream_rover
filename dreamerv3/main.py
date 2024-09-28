@@ -32,6 +32,10 @@ def main(argv=None):
     parsed, other = embodied.Flags(configs=["defaults"]).parse_known(argv)
     config = embodied.Config(agt.Agent.configs["defaults"])
     for name in parsed.configs: #Loops over configs from com-line arguments
+        print(f"Debug: Updating config with {name}")  # Debug print
+        print(f"Debug: Current config: {config.flat}")  # Debug print
+        print(f"Debug: Updating with: {agt.Agent.configs[name]}")  # Debug print
+
         config = config.update(agt.Agent.configs[name])
     config = embodied.Flags(config).parse(other)
     config = config.update(
@@ -51,8 +55,8 @@ def main(argv=None):
     )
     print("Run script:", args.script)
     print("Logdir:", args.logdir)
-    print('args',args)
-    print('config',config)
+    #print('args',args)
+    #print('config',config)
     logdir = embodied.Path(args.logdir)
     if not args.script.endswith(("_env", "_replay")):
         logdir.mkdir()
@@ -63,6 +67,11 @@ def main(argv=None):
 
     embodied.distr.Process.initializers.append(init)
     init()
+
+    print("Full configuration:")
+    print(config)
+    print("\nFlattened configuration:")
+    print(config.flat)
 
     if args.script == "train":
         embodied.run.train(
@@ -243,6 +252,7 @@ def make_env(config, index, **overrides):
         "memmaze": lambda task, **kw: from_gym.FromGym(
             f"MemoryMaze-{task}-ExtraObs-v0", **kw
         ),
+        "turtlebot": "embodied.envs.turtlebot:Turtlebot",
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(":")
@@ -254,6 +264,7 @@ def make_env(config, index, **overrides):
         kwargs["seed"] = hash((config.seed, index)) % (2**32 - 1)
     if kwargs.pop("use_logdir", False):
         kwargs["logdir"] = embodied.Path(config.logdir) / f"env{index}"
+    print(f"Environment constructor kwargs for {suite}:", kwargs)
     env = ctor(task, **kwargs)
     return wrap_env(env, config)
 

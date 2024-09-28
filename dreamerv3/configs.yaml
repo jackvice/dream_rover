@@ -262,6 +262,34 @@ memmaze:
   enc.spaces: 'image'
   dec.spaces: 'image'
 
+
+turtlebot:
+  task: turtlebot_v4
+  run:
+    train_ratio: 512
+    steps: 3e5
+  env:
+    dmc:
+      image: False
+    lidar: True
+    scan_topic: '/scan'  # Configurable scan topic
+    cmd_vel_topic: '/cmd_vel'  # Configurable cmd_vel topic
+  enc.spaces: 'lidar'
+  dec.spaces: 'lidar'
+  
+turtlebot_old:
+  task: turtlebot_v4
+  run:
+    train_ratio: 512
+    steps: 3e5
+    num_envs: 1
+  env:
+    dmc:
+      image: False
+    lidar: True  # Custom key for Lidar data
+  enc.spaces: 'lidar'
+  dec.spaces: 'lidar'
+  
 multicpu:
   jax:
     logical_cpus: 8
