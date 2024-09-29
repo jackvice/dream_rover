@@ -32,11 +32,11 @@ def main(argv=None):
     parsed, other = embodied.Flags(configs=["defaults"]).parse_known(argv)
     config = embodied.Config(agt.Agent.configs["defaults"])
     for name in parsed.configs: #Loops over configs from com-line arguments
-        print(f"Debug: Updating config with {name}")  # Debug print
-        print(f"Debug: Current config: {config.flat}")  # Debug print
-        print(f"Debug: Updating with: {agt.Agent.configs[name]}")  # Debug print
-
+        #print(f"Debug: Updating config with {name}")  # Debug print
+        #print(f"Debug: Current config: {config.flat}")  # Debug print
+        #print(f"Debug: Updating with: {agt.Agent.configs[name]}")  # Debug print
         config = config.update(agt.Agent.configs[name])
+        
     config = embodied.Flags(config).parse(other)
     config = config.update(
         logdir=config.logdir.format(timestamp=embodied.timestamp()),
@@ -68,10 +68,10 @@ def main(argv=None):
     embodied.distr.Process.initializers.append(init)
     init()
 
-    print("Full configuration:")
-    print(config)
-    print("\nFlattened configuration:")
-    print(config.flat)
+    #print("Full configuration:")
+    #print(config)
+    #print("\nFlattened configuration:")
+    #print(config.flat)
 
     if args.script == "train":
         embodied.run.train(
@@ -260,6 +260,16 @@ def make_env(config, index, **overrides):
         ctor = getattr(module, cls)
     kwargs = config.env.get(suite, {})
     kwargs.update(overrides)
+    print(f"Creating Turtlebot environment with kwargs: {kwargs}")  # Debug print
+    try:
+        env = ctor(task, **kwargs)
+        # Ensure the environment is fully initialized
+        if hasattr(env, 'obs_space'):
+            _ = env.obs_space
+        return wrap_env(env, config)
+    except Exception as e:
+        print(f"Error creating environment: {e}")
+        raise
     if kwargs.pop("use_seed", False):
         kwargs["seed"] = hash((config.seed, index)) % (2**32 - 1)
     if kwargs.pop("use_logdir", False):

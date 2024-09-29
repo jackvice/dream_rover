@@ -268,25 +268,30 @@ turtlebot:
   run:
     train_ratio: 512
     steps: 3e5
+    num_envs: 1
+  env:
+    dmc:
+      image: False
+    lidar: True
+    scan_topic: '/scan'
+    cmd_vel_topic: '/cmd_vel'
+    connection_check_timeout: 30  # Wait 30 seconds for connection
+    lidar_points: 640  # Set this to match your actual lidar configuration
+    max_lidar_range: 100.0
+  enc.spaces: 'lidar'
+  dec.spaces: 'lidar'
+  
+turtlebot_no_timeout:
+  task: turtlebot_v4
+  run:
+    train_ratio: 512
+    steps: 3e5
   env:
     dmc:
       image: False
     lidar: True
     scan_topic: '/scan'  # Configurable scan topic
     cmd_vel_topic: '/cmd_vel'  # Configurable cmd_vel topic
-  enc.spaces: 'lidar'
-  dec.spaces: 'lidar'
-  
-turtlebot_old:
-  task: turtlebot_v4
-  run:
-    train_ratio: 512
-    steps: 3e5
-    num_envs: 1
-  env:
-    dmc:
-      image: False
-    lidar: True  # Custom key for Lidar data
   enc.spaces: 'lidar'
   dec.spaces: 'lidar'
   
