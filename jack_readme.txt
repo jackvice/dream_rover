@@ -14,7 +14,10 @@ python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
 
 
 
-ROS:
+################ ROS2
+
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 control list_controllers
 
 ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
 
