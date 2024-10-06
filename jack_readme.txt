@@ -26,3 +26,8 @@ ros2 service call /controller_manager/switch_controller controller_manager_msgs/
 
 ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController "{start_controllers: ['diffdrive_controller'], stop_controllers: [], strictness: 1, start_asap: false, timeout: {sec: 5, nanosec: 0}}"
 
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+# Files
+# robot urdf files: changed lidar from 640 to 64
+/opt/ros/humble/share/turtlebot4_description/urdf/

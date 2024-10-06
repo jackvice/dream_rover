@@ -157,7 +157,7 @@ class Turtlebot(embodied.Env):
         rclpy.shutdown()
 
 
-        
+"""
 class Turtlebot_09_28_2315(embodied.Env):
     def __init__(self, task, size=(64, 64), length=100, scan_topic='/scan',
                  cmd_vel_topic='/cmd_vel', connection_check_timeout=30):
@@ -370,3 +370,4 @@ class Turtlebot_no_sim_data(embodied.Env):
     def close(self):
         self.node.destroy_node()
         rclpy.shutdown()
+"""

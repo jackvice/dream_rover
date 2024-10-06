@@ -1,0 +1,1000 @@
+ 1016  ls gym-turtlebot3/gym_turtlebot3 -lsrt
+ 1017  ls gym-turtlebot3/gym_turtlebot3/envs/ -lsrt
+ 1018  ls gym-turtlebot3/gym_turtlebot3/envs/turtlebot3_env_threads1.py
+ 1019  more gym-turtlebot3/gym_turtlebot3/envs/turtlebot3_env_threads1.py
+ 1020  find . -name "*.py" -type f -exec grep -H "import gym" {} \; -printf "%T@ %p\n" | sort -n | cut -d' ' -f2-
+ 1021  emacs gym-turtlebot3/gym_turtlebot3/envs/turtlebot3_env_threads1.py &
+ 1022  cd ..
+ 1023  cd turtlebot
+ 1024  ls
+ 1025  find . -name "*.py" -type f -exec grep -H "import gym" {} \; -printf "%T@ %p\n" | sort -n | cut -d' ' -f2-
+ 1026  cd ..
+ 1027  ls
+ 1028  git clone https://github.com/PIC4SeR/PIC4rl_gym.git
+ 1029  cd PIC4rl_gym/
+ 1030  find . -name "*.py" -type f -exec grep -H "import gym" {} \; -printf "%T@ %p\n" | sort -n | cut -d' ' -f2-
+ 1031  grep -r "import gym"
+ 1032  grep -r "def step("
+ 1033  nvidia-smi
+ 1034  ls -lsrt miniconda3/envs/
+ 1035  conda remove -n rlgpu --all
+ 1036  ls -lsrt miniconda3/envs/
+ 1037  conda remove -n isaac --all
+ 1038  conda remove -n igibson1 --all
+ 1039  conda remove -n jax --all
+ 1040  conda remove -n ray --all
+ 1041  ls -lsrt miniconda3/envs/
+ 1042  conda remove -n omnigibson --all
+ 1043  df
+ 1044  du * -s
+ 1045  du * -sh
+ 1046  cd logdir/
+ 1047  ls -lsrt
+ 1048  cd ..
+ 1049  rm -rf logdir/
+ 1050  df
+ 1051  cd Downloads/
+ 1052  ls
+ 1053  cd ..
+ 1054  rm -rf Downloads/
+ 1055  mkdir Downloads
+ 1056  df
+ 1057  du * -sh
+ 1058  cd src/
+ 1059  du * -sh
+ 1060  rm -rf delta-iris/
+ 1061  du * -sh
+ 1062  ls autoencoder/
+ 1063  cd autoencoder/
+ 1064  du * -sh
+ 1065  rm -rf data/
+ 1066  cd ..
+ 1067  cd imagenet-autoencoder/
+ 1068  du * -sh
+ 1069  rm -rf results/
+ 1070  cd ..
+ 1071  df
+ 1072  conda env list
+ 1073  ls miniconda3/ -lsrt
+ 1074  ls miniconda3/envs/ -lsrt
+ 1075  conda remove -n FusionGAN --all
+ 1076  ls
+ 1077  ls miniconda3/envs/ -lsrt
+ 1078  conda remove -n sbx --all
+ 1079  conda remove -n tf --all
+ 1080  ls miniconda3/envs/ -lsrt
+ 1081  conda remove -dfn --all
+ 1082  conda remove -n dfm --all
+ 1083  ls miniconda3/envs/ -lsrt
+ 1084  conda remove -n tf1_6 --all
+ 1085  ls miniconda3/envs/ -lsrt
+ 1086  conda remove -n tf2.1 --all
+ 1087  ls miniconda3/envs/ -lsrt
+ 1088  conda remove -n tf1.15 --all
+ 1089  ls miniconda3/envs/ -lsrt
+ 1090  conda remove -n torch1.8 --all
+ 1091  ls miniconda3/envs/ -lsrt
+ 1092  conda remove -n yolo8 --all
+ 1093  ls
+ 1094  python
+ 1095  conda create -n jax python=3.10.15
+ 1096  conda create -n jax python=3.10.14
+ 1097  conda activate jax
+ 1098  which python
+ 1099  pip install -U "jax[cuda12]"
+ 1100  pip install pytz
+ 1101  cd src/dream_rover/
+ 1102  ls
+ 1103  pip install upgrade pip
+ 1104  pip install --upgrade pip
+ 1105  pip install --upgrade wheel
+ 1106  pip install --upgrade setuptools
+ 1107  emacs jax_test.py &
+ 1108  python jax_test.py 
+ 1109  pip install -U -r embodied/requirements.txt
+ 1110  pip install -U -r dreamerv3/requirements.txt   -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+ 1111  ls
+ 1112  python example.py
+ 1113  pip install crafter
+ 1114  python example.py
+ 1115  pip install "gym[atari]" "gym[accept-rom-license]" atari_py
+ 1116  python example.py
+ 1117  pip install autopep8
+ 1118  autopep8 --indent-size 4 --in-place dreamerv3/agent.py 
+ 1119  python example.py
+ 1120  autopep8 --indent-size 4 --in-place example.py 
+ 1121  python example.py
+ 1122  emacs example.py &
+ 1123  python example.py
+ 1124  emacs example.py &
+ 1125  python example.py
+ 1126  ls -lsrt
+ 1127  ls dreamerv3/
+ 1128  rm example.py 
+ 1129  mv dreamerv3/example.py example.py
+ 1130  python example.py
+ 1131  grep -r "from_gym"
+ 1132  cd dreamerv3/
+ 1133  ls
+ 1134  cd ../embodied/
+ 1135  ls
+ 1136  cd envs/
+ 1137  ls
+ 1138  more dummy.py 
+ 1139  ls -l
+ 1140  more bsuite.py 
+ 1141  more atari.py 
+ 1142  ls -l
+ 1143  more dmlab.py 
+ 1144  ls -l
+ 1145  more from_gym.py 
+ 1146  src
+ 1147  ls
+ 1148  cd src
+ 1149  ls
+ 1150  ls -lsrt
+ 1151  cd dream_rover/
+ 1152  ls
+ 1153  git add --all
+ 1154  git commit -m 'adding comments'
+ 1155  git push
+ 1156  conda activate jax
+ 1157  grep -r gymnasium
+ 1158  grep -r 'gymnasium'
+ 1159  grep -r 'import gym'
+ 1160  ls
+ 1161  emacs embodied/envs/from_gym.py &
+ 1162  pip install gym[box2d]
+ 1163  pip install --upgrade wheel
+ 1164  pip install --upgrade setuptools
+ 1165  pip install gym[box2d]
+ 1166  conda install conda-forge::gym-box2d
+ 1167  pip install gym[mujoco]
+ 1168  pip install mujoco_py
+ 1169  grep -r 'ctor'
+ 1170  grep -r 'ctor ='
+ 1171  emacs dreamerv3/main.py &
+ 1172  python dreamerv3/main.py   --logdir ~/logdir/{timestamp}   --configs memaze   --run.train_ratio 32'
+ 1173  python dreamerv3/main.py   --logdir ~/logdir/{timestamp}   --configs memaze  --run.train_ratio 32
+ 1174  ls
+ 1175  python dreamerv3/main.py   --logdir ~/logdir/{timestamp}   --configs memaze  --run.train_ratio 32
+ 1176  ls
+ 1177  ls embodied/
+ 1178  more embodied/__init__.py 
+ 1179  ls embodied/
+ 1180  more embodied/__init__.py 
+ 1181  python dreamerv3/main.py   --logdir ~/logdir/{timestamp}   --configs memaze  --run.train_ratio 32
+ 1182  conda activate jax
+ 1183  cd src/dream_rover/
+ 1184  ls
+ 1185  python dreamerv3/main.py   --logdir ~/logdir/{timestamp}   --configs crafter   --run.train_ratio 32
+ 1186  emacs dreamerv3/configs.yaml &
+ 1187  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs mountaincar
+ 1188  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1189  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1190  emacs embodied/core/config.py &
+ 1191  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1192  pip list
+ 1193  pip install gym[box2d]
+ 1194  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1195  pip install gym[box2d]
+ 1196  pip freeze > requirements.xtxt
+ 1197  emac requirements.xtxt &
+ 1198  emacs requirements.xtxt &
+ 1199  sudo apt-get install swig
+ 1200  pip install gym[box2d]
+ 1201  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1202  grep -r 'class SimpleEncoder'
+ 1203  emacs dreamerv3/nets.py &
+ 1204  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1205  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1206  rm dreamerv3/nets.py 
+ 1207  mv ~/Downloads/nets.py dreamerv3/
+ 1208  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1209  cp dreamerv3/nets_09_25.py dreamerv3/nets.py 
+ 1210  cd dreamerv3/
+ 1211  ls 
+ 1212  rm agent.py 
+ 1213  cp agent_origin.py agent.py
+ 1214  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1215  cd ..
+ 1216  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1217  ls
+ 1218  cd dreamerv3/
+ 1219  ls
+ 1220  ls main*
+ 1221  ls -lsrt
+ 1222  mv main.py main_09_25.py
+ 1223  mv ~/Downloads/main.py ./
+ 1224  cp main.py main_origin.py
+ 1225  cd ..
+ 1226  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1227  cd dreamerv3/
+ 1228  ls
+ 1229  rm main_comments.py*
+ 1230  ls *~
+ 1231  emacs jack_readme.txt &
+ 1232  cp main_09_25.py main.py
+ 1233  cd ..
+ 1234  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1235  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
+ 1236  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1237  pip install gym-deepmindlab
+ 1238  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1239  cd ~/temp/
+ 1240  git clone https://github.com/deepmind/lab.git && cd lab
+ 1241  bazel build -c opt --python_version=PY2 //python/pip_package:build_pip_package
+ 1242  sudo apt install bazel-bootstrap
+ 1243  sudo apt install apt-transport-https curl gnupg -y
+ 1244  curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+ 1245  sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+ 1246  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+ 1247  sudo apt update && sudo apt install bazel
+ 1248  bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package
+ 1249  sudo apt-get install python3-dev
+ 1250  bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package
+ 1251  cd ~/src/dream_rover/
+ 1252  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs minecraft
+ 1253  pip install git+https://github.com/minerllabs/minerl
+ 1254  cd ~/temp/
+ 1255  bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package
+ 1256  ls -lsrt
+ 1257  cd lab/
+ 1258  cd 
+ 1259  git clone https://github.com/deepmind/lab.git && cd lab
+ 1260  cd ..
+ 1261  rm -rf lab
+ 1262  rm -rf temp/lab/
+ 1263  cd src/
+ 1264  git clone https://github.com/deepmind/lab.git && cd lab
+ 1265  bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package
+ 1266  sudo apt-get install libosmesa6-dev
+ 1267  bazel build -c opt --python_version=PY3 //python/pip_package:build_pip_package
+ 1268  ./bazel-bin/python/pip_package/build_pip_package /tmp/dmlab_pkg
+ 1269  pip install /tmp/dmlab_pkg/deepmind_lab-1.0-py3-none-any.whl  
+ 1270  cd ~/src/dream_rover/
+ 1271  ls
+ 1272  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1273  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/
+ 1274  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/
+ 1275  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab-1.0.dist-info/
+ 1276  cd
+ 1277  find . -name 'deepmind_lab.so'
+ 1278  cp /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/deepmind_lab.so    /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/
+ 1279  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1280  cd src/dream_rover/
+ 1281  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1282  emacs dm_lab_test.py &
+ 1283  python dm_lab_test.py 
+ 1284  cd
+ 1285  find . -name 'libdmlab_headless_sw.so'
+ 1286  cd miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/
+ 1287  ls
+ 1288  cd ~/src/dream_rover/
+ 1289  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main
+ 1290  echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main' >> ~/.bashrc
+ 1291  python dm_lab_test.py 
+ 1292  cd miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/
+ 1293  cd ~/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/
+ 1294  cp *.so ../
+ 1295  cd
+ 1296  cd src/dream_rover/
+ 1297  python dm_lab_test.py 
+ 1298  find ~/. -name 'libstdc++.so.6'
+ 1299  find ~/. -name '*libstdcxx-n*'
+ 1300  conda install libstdcxx-ng=13.2.0
+ 1301  python dm_lab_test.py 
+ 1302  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/game_scripts/levels/demos/
+ 1303  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/
+ 1304  env
+ 1305  tail ~/.bashrc
+ 1306  env
+ 1307  python dm_lab_test.py 
+ 1308  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/
+ 1309  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/
+ 1310  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/deepmind/
+ 1311  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/
+ 1312  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/baselab/game_scripts/
+ 1313  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/baselab/game_scripts/decorators/
+ 1314  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1315  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/baselab/game_scripts/levels/contributed/dmlab30/explore_goal_locations_small.lua 
+ 1316  ln -s /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/baselab /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab
+ 1317  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1318  sudo apt-get install libluajit-5.1-dev
+ 1319  sudo apt-get install libsdl2-dev
+ 1320  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1321  python -m deepmind_lab --list_levels
+ 1322  find ~/. -name 'deepmind_lab'
+ 1323  ls /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab
+ 1324  ls /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/game_scripts/levels/
+ 1325  ls tests
+ 1326  ls /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/game_scripts/levels/tests/
+ 1327  ls /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/game_scripts/levels/tests/empty_room_test.lua 
+ 1328  cd ..
+ 1329  cd /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/
+ 1330  fls
+ 1331  ls
+ 1332  ls baselab
+ 1333  cd baselab/game_scripts/levels/
+ 1334  ls
+ 1335  ls tests/
+ 1336  python -m deepmind_lab --level_script "tests/empty_room_test" --width 640 --height 480 --fps 60
+ 1337  cd ~/src/dream_rover/dreamerv3/
+ 1338  ls
+ 1339  cd ..
+ 1340  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab --logtostderr --v=2
+ 1341  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab_env --logtostderr --v=2
+ 1342  cd /home/jack/./miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/
+ 1343  ls
+ 1344  cd baselab
+ 1345  ls
+ 1346  cd game_scripts/
+ 1347  ls
+ 1348  cd levels/
+ 1349  ls
+ 1350  emacs test_dmlab.py &
+ 1351  python test_dmlab.py 
+ 1352  ls ../../
+ 1353  find ~/. -name 'compile_map.sh'
+ 1354  cd ..
+ 1355  ls
+ 1356  ls -l
+ 1357  cd ..
+ 1358  ls
+ 1359  ls -l
+ 1360  echo 'export DMLAB_COMPILE_MAP_PATH=/home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/deepmind/level_generation/compile_map.sh' >> ~/.bashrc
+ 1361  source ~/.bashrc
+ 1362  ls
+ 1363  cd baselab/game_scripts/levels/
+ 1364  python test_dmlab.py 
+ 1365  le /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/deepmind/level_generation/compile_map.sh
+ 1366  ls /home/jack/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/_main/deepmind/level_generation/compile_map.sh
+ 1367  echo $DMLAB_COMPILE_MAP_PATH
+ 1368  cd ..
+ 1369  ls
+ 1370  cd _main/
+ 1371  ls
+ 1372  cp -r baselab/ ../
+ 1373  cp -r deepmind/ ../
+ 1374  cd ../baselab/game_scripts/levels/
+ 1375  python test_dmlab.py 
+ 1376  sudo apt-get update
+ 1377  sudo apt-get install build-essential git zlib1g-dev libjpeg-dev libgtk2.0-dev libsdl2-dev libpng-dev
+ 1378  python test_dmlab.py 
+ 1379  source ~/.bashrc
+ 1380  python test_dmlab.py 
+ 1381  echo $PATH
+ 1382  source ~/.bashrc
+ 1383  python test_dmlab.py 
+ 1384  echo $PATH
+ 1385  ls /home/jack/temp/netradiant/install
+ 1386  which q3map2
+ 1387  ls /home/jack/temp/netradiant/install/q3map2
+ 1388  ls -l /home/jack/temp/netradiant/install/q3map2
+ 1389  q3map2 -version
+ 1390  python test_dmlab.py 
+ 1391  ls -l /home/jack/temp/netradiant/install/q3map2
+ 1392  export DMLAB_COMPILE_MAP_PATH=/home/jack/temp/netradiant/install/q3map2
+ 1393  python test_dmlab.py 
+ 1394  export DMLAB_COMPILE_MAP_PATH=/home/jack/temp/netradiant/install/
+ 1395  python test_dmlab.py 
+ 1396  echo $DMLAB_COMPILE_MAP_PATH
+ 1397  export DMLAB_COMPILE_MAP_PATH=/home/jack/temp/netradiant/install/q3map2
+ 1398  python test_dmlab.py 
+ 1399  ls -l /home/jack/temp/netradiant/install/q3map2
+ 1400  echo $DMLAB_COMPILE_MAP_PATH
+ 1401  export DMLAB_Q3MAP2=/home/jack/temp/netradiant/install/q3map2
+ 1402  python test_dmlab.py 
+ 1403  export DMLAB_Q3MAP2_PATH=/home/jack/temp/netradiant/install/q3map2
+ 1404  python test_dmlab.py 
+ 1405  /home/jack/temp/netradiant/install/q3map2 -version
+ 1406  python test_dmlab.py 
+ 1407  emac test_dmlab.py &
+ 1408  emacs test_dmlab.py &
+ 1409  python test_dmlab.py 
+ 1410  which q3map2
+ 1411  chmod +x /home/jack/temp/netradiant/install/q3map2
+ 1412  python test_dmlab.py 
+ 1413  chmod +x /home/jack/temp/netradiant/install/q3map2
+ 1414  which q3map2
+ 1415  /home/jack/temp/netradiant/install/q3map2 -version
+ 1416  q3map2 -version
+ 1417  which q3map2
+ 1418  chmod +x /home/jack/temp/netradiant/install/q3map2
+ 1419  python test_dmlab.py 
+ 1420  q3map2 -version
+ 1421  ldd /home/jack/temp/netradiant/install/q3map2
+ 1422  export PATH=$PATH:/home/jack/temp/netradiant/install
+ 1423  export DMLAB_Q3MAP2=/home/jack/temp/netradiant/install/q3map2
+ 1424  python test_dmlab.py 
+ 1425  wget https://icculus.org/gtkradiant/downloads/1.6/1.6.4/gtkradiant-1.6.4-x86_64.run
+ 1426  chmod +x gtkradiant-1.6.4-x86_64.run
+ 1427  cd 
+ 1428  cd ~/miniconda3/envs/jax/lib/python3.10/site-packages/deepmind_lab/baselab/game_scripts/levels
+ 1429  python test_dmlab.py 
+ 1430  cd ~/src/dream_rover/
+ 1431  history
+ 1432  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1433  find . -name '*.map'
+ 1434  export DMLAB_COMPILE_MAP_PATH="/home/jack/temp/netradiant/install/q3map2"
+ 1435  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmlab
+ 1436  history
+ 1437  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs minecraft
+ 1438  pip install minerl
+ 1439  pip install gym==0.19.0
+ 1440  pip install setuptools==58.0.4
+ 1441  pip install gym==0.19.0
+ 1442  pip install pyyaml
+ 1443  pip install setuptools==58.0.4
+ 1444  pip install gym==0.19.0
+ 1445  pip install pip==23.1
+ 1446  pip install gym==0.19.0
+ 1447  pip install pip==23.0
+ 1448  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1449  pip uninstall gym
+ 1450  pip install minerl
+ 1451  pip install git+https://github.com/minerllabs/minerl
+ 1452  sudo add-apt-repository ppa:openjdk-r/ppa
+ 1453  sudo apt-get update
+ 1454  sudo apt-get install openjdk-8-jdk
+ 1455  java -version
+ 1456  pip install git+https://github.com/minerllabs/minerl
+ 1457  ls
+ 1458  ls -lsrt
+ 1459  rm dm_lab_test.py*
+ 1460  emacs dreamerv3/main.py &
+ 1461  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs crafter
+ 1462  exit
+ 1463  cd src/dream_rover/
+ 1464  emacs dreamerv3/main.py &
+ 1465  ls embodied/envs/
+ 1466  grep -r 'MemoryMaze'
+ 1467  grep -r 'memmaze'
+ 1468  emacs dreamerv3/agent.py &
+ 1469  grep -r 'depth'
+ 1470  cd
+ 1471  du * -sh
+ 1472  rm -rf logdir/
+ 1473  nvidia-smi -l
+ 1474  cd src/dream_rover/dreamerv3/
+ 1475  ls
+ 1476  cd .
+ 1477  cd ..
+ 1478  cd embodied/envs/
+ 1479  ls
+ 1480  more dmlab.py 
+ 1481  cd
+ 1482  cd temp/
+ 1483  git clone https://gitlab.com/xonotic/netradiant.git
+ 1484  cd netradiant
+ 1485  make
+ 1486  cmake
+ 1487  cmake ..
+ 1488  ls
+ 1489  apt-get install --reinstall build-essential cmake     lib{x11,gtk2.0,gtkglext1,xml2,jpeg,webp,minizip}-dev     git subversion unzip wget
+ 1490  sudo apt-get install --reinstall build-essential cmake     lib{x11,gtk2.0,gtkglext1,xml2,jpeg,webp,minizip}-dev     git subversion unzip wget
+ 1491  cd ..
+ 1492  rm -rf netradiant/
+ 1493  git clone --recursive https://gitlab.com/xonotic/netradiant.git
+ 1494  cd netradiant
+ 1495  sudo apt-get install --reinstall build-essential cmake     lib{x11,gtk2.0,gtkglext1,xml2,jpeg,webp,minizip}-dev     git subversion unzip wget
+ 1496  ./easy-builder 
+ 1497  ls
+ 1498  cd install/
+ 1499  ls
+ 1500  pwd
+ 1501  echo 'export PATH=$PATH:/home/jack/temp/netradiant/install/q3map2' >> ~/.bashrc
+ 1502  source ~/.bashrc
+ 1503  emacs ~/.bashrc &
+ 1504  ls -lsrt ~/Downloads/
+ 1505  cd ~/Downloads/
+ 1506  sudo apt install flatpak
+ 1507  flatpak install io.github.TTimo.GtkRadiant.flatpakref
+ 1508  nvidia-smi
+ 1509  cd ~/src/dream_rover/
+ 1510  ls
+ 1511  emacs dreamerv3/nets.py &
+ 1512  nvidia-smi
+ 1513  exit
+ 1514  nvidia-smi
+ 1515  nvidia-smi -l
+ 1516  ls
+ 1517  cd src/dreamerv3-torch/
+ 1518  sl
+ 1519  ls
+ 1520  ls -lsrt
+ 1521  cd logdir/
+ 1522  ls
+ 1523  cd dmc_walker_walk/
+ 1524  ls
+ 1525  nvidia-smi -l
+ 1526  cd cd ..
+ 1527  cd ..
+ 1528  grep -r 'avx512er' 
+ 1529  cd ..
+ 1530  conda env list
+ 1531  conda create -n dream python=3.11
+ 1532  conda activate dream
+ 1533  cd src/
+ 1534  ls
+ 1535  git clone https://github.com/NM512/dreamerv3-torch.git
+ 1536  cd dreamerv3-torch/
+ 1537  ls
+ 1538  pip install -r requirements.txt
+ 1539  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1540  pip install PyOpenGL PyOpenGL-accelerate
+ 1541  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1542  glxinfo | grep OpenGL
+ 1543  sudo apt-get install libosmesa6-dev
+ 1544  glxinfo | grep OpenGL
+ 1545  sudo apt install mesa-utils
+ 1546  glxinfo | grep OpenGL
+ 1547  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1548  export MUJOCO_GL=osmesa
+ 1549  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1550  glxinfo | grep OpenGL
+ 1551  export MUJOCO_GL="egl"
+ 1552  export MUJOCO_GL="glfw"
+ 1553  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1554  sudo apt-get install freeglut3-dev
+ 1555  pip install PyOpenGL PyOpenGL_accelerate
+ 1556  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1557  pip install dm_control
+ 1558  export MUJOCO_GL="osmesa"
+ 1559  sudo apt-get install mesa-utils
+ 1560  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1561  conda install conda-forge::mesalib
+ 1562  python3 dreamer.py --configs dmc_vision --task dmc_walker_walk --logdir ./logdir/dmc_walker_walk
+ 1563  conda install -c conda-forge openjdk=8
+ 1564  cd envs/setup_scripts/
+ 1565  ls
+ 1566  bash minecraft.sh 
+ 1567  cd ..
+ 1568  ls
+ 1569  python3 dreamer.py --configs dmc_vision --task minecraft_diamond --logdir ./logdir/minecraft_diamond
+ 1570  python3 dreamer.py --configs dmc_vision --task minecraft_diamond --logdir ./logdir/minecraft_diamond --break_speed 1.0
+ 1571  python3 dreamer.py --configs dmc_vision --task minecraft_diamond --logdir ./logdir/minecraft_diamond
+ 1572  grep -r 'break_speed'
+ 1573  pip install gym[box2d]
+ 1574  conda install conda-forge::gym-box2d
+ 1575  pip install gym[box2d]
+ 1576  python
+ 1577  pip install gym[box2d] --force-reinstall
+ 1578  conda install conda-forge::gym-box2d
+ 1579  pip uninstall gym[box2d] 
+ 1580  pip install Box2D
+ 1581  python
+ 1582  pip uninstall Box2D
+ 1583  conda install conda-forge::gym-box2d
+ 1584  pip install box2d-py
+ 1585  python
+ 1586  pip install gym[mujoco]
+ 1587  pip install cffi
+ 1588  pip install gym[mujoco]
+ 1589  pip install Cython
+ 1590  pip install gym[mujoco]
+ 1591  pip install lockfile
+ 1592  pip install gym[mujoco]
+ 1593  python
+ 1594  pip install pygame
+ 1595  python
+ 1596  cd ..
+ 1597  cd dream_rover
+ 1598  git add --all
+ 1599  git commit -m 'test some stuff'
+ 1600  git push
+ 1601  cd ..
+ 1602  mv dream_rover bak/old_dream_rover
+ 1603  ls
+ 1604  cd dreamerv3-torch/
+ 1605  ls
+ 1606  cd envs/
+ 1607  ls
+ 1608  emacs atari.py &
+ 1609  ls -l
+ 1610  emacs memorymaze.py &
+ 1611  meacs dmc.py &
+ 1612  emacs dmc.py &
+ 1613  cd ..
+ 1614  ls envs/
+ 1615  ls envs/setup_scripts/
+ 1616  ls 
+ 1617  ls envs
+ 1618  more configs.yaml 
+ 1619  emacs configs.yaml &
+ 1620  grep dmc_proprio
+ 1621  grep -r 'dmc_proprio'
+ 1622  grep -r 'from_gym'
+ 1623  ls envs
+ 1624  more envs/wrappers.py 
+ 1625  ls cd ../bak/old_dream_rover/
+ 1626  grep -r  ../bak/old_dream_rover/ 'from_gym'
+ 1627  grep -r 'from_gym' ../bak/old_dream_rover/ 
+ 1628  memacs ../bak/old_dream_rover/embodied/envs/from_gym.py &
+ 1629  emacs ../bak/old_dream_rover/embodied/envs/from_gym.py &
+ 1630  cd ../dreamT_rover/
+ 1631  ls
+ 1632  mv configs.yaml configs_origin.yaml 
+ 1633  mv configs_origin.yaml origin_configs.yaml
+ 1634  emacs configs.yaml &
+ 1635  grep -r 'make_env('
+ 1636  emacs dreamer.py &
+ 1637  conda activate dream
+ 1638  grep -r 'minecraft'
+ 1639  more configs.yaml 
+ 1640  grep -r 'crafter'
+ 1641  grep -r 'acrobot'
+ 1642  grep -r 'dmc_walker_walk
+ 1643  grep -r 'dmc_walker_walk'
+ 1644  grep -r 'task: '
+ 1645  cd ..
+ 1646  ls
+ 1647  git clone git@github.com:jackvice/dream_rover.git
+ 1648  cd bak/
+ 1649  ls
+ 1650  df
+ 1651  cd ../dream_rover/
+ 1652  ls
+ 1653  conda deactivate
+ 1654  conda activate jax
+ 1655  pip install dm_control
+ 1656  ls ../bak/old_dream_rover/
+ 1657  ls ../bak/old_dream_rover/dreamerv3/
+ 1658  mv dreamerv3/jack_readme.txt ./
+ 1659  emacs jack_readme.txt &
+ 1660  emacs dreamerv3/configs.yaml &
+ 1661  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
+ 1662  emacs ../dreamT_rover/configs.yaml &
+ 1663  ls
+ 1664  emacs dreamerv3/main.py &
+ 1665  grep -r 'dmc_proprio'
+ 1666  grep -r 'atari100k'
+ 1667  grep -r 'FromGym'
+ 1668  cp ../dreamT_rover/envs/acrobot.py embodied/envs/
+ 1669  history
+ 1670  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
+ 1671  exit
+ 1672  history
+ 1673  emacs src/dream_rover/jack_readme.txt &
+ 1674  cd src/
+ 1675  git clone git@github.com:jackvice/dreamT_rover.git
+ 1676  cd dreamerv3-torch/
+ 1677  ls -lsrt
+ 1678  cp configs.yaml ../dreamT_rover/
+ 1679  cd envs/
+ 1680  ls
+ 1681  ls -lsrt
+ 1682  cd ..
+ 1683  cd dreamT_rover/
+ 1684  ls
+ 1685  conda env list
+ 1686  conda activate dream
+ 1687  cd envs/
+ 1688  emacs gym_env.py &
+ 1689  emacs acrobat.py &
+ 1690  ls -l
+ 1691  more crafter.py 
+ 1692  cd ..
+ 1693  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat
+ 1694  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat > configs_out.txt
+ 1695  python 
+ 1696  grep -r 'Acrobot'
+ 1697  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat > configs_out.txt
+ 1698  grep -r 'Acrobot'
+ 1699  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat > configs_out.txt
+ 1700  grep -r 'Acrobat'
+ 1701  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat > configs_out.txt
+ 1702  grep -r 'acrobat'
+ 1703  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat 
+ 1704  grep -r 'acrobat'
+ 1705  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat 
+ 1706  rm envs/acrobat.py~ 
+ 1707  rm envs/acrobat.py 
+ 1708  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobat 
+ 1709  grep -r 'acrobat'
+ 1710  find . -name '*acrobat'
+ 1711  python3 dreamer.py --configs acrobat --task acrobat --logdir ./logdir/acrobot 
+ 1712  rm -rf ~/logdir/
+ 1713  rm -rf logdir/acrobat/
+ 1714  python3 dreamer.py --configs acrobat --task acrobat --logdir ~/logdir/acrobot 
+ 1715  find . -name '*acrobat*'
+ 1716  grep -r 'acrobat'
+ 1717  python3 dreamer.py --configs acrobot --task acrobat --logdir ~/logdir/acrobot 
+ 1718  python3 dreamer.py --configs acrobot --task acrobot --logdir ~/logdir/acrobot 
+ 1719  emacs debug.txt &
+ 1720  python3 dreamer.py --configs acrobot --task Acrobat_v1 --logdir ~/logdir/acrobot 
+ 1721  python3 dreamer.py --configs acrobot --task Acrobot_v1 --logdir ~/logdir/acrobot 
+ 1722  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot 
+ 1723  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot
+ 1724  python3 dreamer.py --configs dmc_proprio --task dmc_walker_walk --logdir ~/logdir/dmc_walker_walk
+ 1725  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot
+ 1726  emacs tools.py &
+ 1727  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot
+ 1728  python3 dreamer.py --configs dmc_proprio --task dmc_walker_walk --logdir ~/logdir/dmc_walker_walk
+ 1729  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot
+ 1730  emacs models.py &
+ 1731  python3 dreamer.py --configs acrobot --task acrobot_v1 --logdir ~/logdir/acrobot
+ 1732  python3 dreamer.py --configs dmc_proprio --task dmc_walker_walk --logdir ~/logdir/dmc_walker_walk
+ 1733  cd ../bak/
+ 1734  ls
+ 1735  cd ../dreamerv3-torch/
+ 1736  python3 dreamer.py --configs dmc_proprio --task dmc_walker_walk --logdir ~/logdir/dmc_walker_walk
+ 1737  cd ..
+ 1738  rm -rf dreamerv3-torch/
+ 1739  cd bak/
+ 1740  git clone https://github.com/NM512/dreamerv3-torch.git
+ 1741  cd dreamerv3-torch/
+ 1742  emacs models.py &
+ 1743  python3 dreamer.py --configs dmc_proprio  --logdir ~/logdir/dmc_walker_walk
+ 1744  cd ..
+ 1745  conda deactivate
+ 1746  cd dream_rover/
+ 1747  ls
+ 1748  cd embodied/
+ 1749  cd envs/
+ 1750  ls 
+ 1751  ls -l
+ 1752  emacs from_gym.py &
+ 1753  mv ~/Downloads/from_gym.py ./
+ 1754  conda activate jax
+ 1755  which black
+ 1756  pip install black
+ 1757  black --check from_gym.py 
+ 1758  black from_gym.py 
+ 1759  emacs from_gym.py &
+ 1760  ls -l
+ 1761  emacs dmc.py &
+ 1762  emacs crafter.py &
+ 1763  emacs acrobot.py &
+ 1764  emacs atari.py &
+ 1765  emacs dummy.py 
+ 1766  emacs dummy.py &
+ 1767  python
+ 1768  ls
+ 1769  more dummy.py 
+ 1770  more dmc.py 
+ 1771  emacs dummy.py &
+ 1772  more dmlab.py 
+ 1773  nvidia-smi
+ 1774  ros2 topic list
+ 1775  ros2 topic info /cmd_vel
+ 1776  ros2 topic echo /cmd_vel
+ 1777  ros2 node info /<diffdrive_controller_node>
+ 1778  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1779  (jax) jack@HAL:~/src/dream_rover/embodied/envs$ ros2 topic list
+ 1780  /parameter_events
+ 1781  /rosout
+ 1782  ps aux | grep ros
+ 1783  kill -9 26596
+ 1784  ps aux | grep ros
+ 1785  kill -9 40470
+ 1786  ps aux | grep ros
+ 1787  kill -9 40473
+ 1788  ps aux | grep ros
+ 1789  ros2 daemon stop
+ 1790  ps aux | grep ros
+ 1791  kill -9 40501
+ 1792  ps aux | grep ros
+ 1793  ros2 topic list
+ 1794  top
+ 1795  ls
+ 1796  cd src/bak/
+ 1797  ls
+ 1798  git clone https://github.com/danijar/dreamerv3.git
+ 1799  cd dreamerv3
+ 1800  conda activate jax
+ 1801  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
+ 1802  cd ..
+ 1803  cd ../
+ 1804  ls
+ 1805  ls -lsrt
+ 1806  mv UnityRos2/ bak/
+ 1807  mv ros2-unity-turtlebot3/ bak/
+ 1808  mv sb3_sbx/ bak/
+ 1809  mv dreamT_rover/ bak/
+ 1810  ls
+ 1811  mkdir txt_files
+ 1812  mv *.txt txt_files/
+ 1813  mv OmniGibson/ bak/
+ 1814  rm turtlebot-rl.png 
+ 1815  mv turtlebot-rl.tgz bak/
+ 1816  mv iGibsonChallenge2021/ bak/
+ 1817  mv lab/ bak/
+ 1818  mv paperspace_example/ bak/
+ 1819  mv ray/ bak/
+ 1820  ls -l
+ 1821  mv igib_sbx/ bak/
+ 1822  ls my_agents_data/
+ 1823  cd dream_rover/
+ 1824  emacs old/temp.txt &
+ 1825  nvidia-smi
+ 1826  nvidia-smi -l
+ 1827  git add --all
+ 1828  git commit -m 'move old files and add comments'
+ 1829  git push
+ 1830  emacs embodied/envs/turtlebot.py &
+ 1831  emacs embodied/envs/dmc.py &
+ 1832  emacs embodied/envs/dummy.py &
+ 1833  emacs embodied/envs/atari.py &
+ 1834  cd embodied/envs/
+ 1835  more dmlab.py 
+ 1836  emacs ../../dreamerv3/configs.yaml &
+ 1837  ros2 topic list
+ 1838  ros2 topic echo /scan
+ 1839  ros2 topic list
+ 1840  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1841  emacs /opt/ros/humble/share/irobot_create_control/config/control.yaml &
+ 1842  ros2 node list
+ 1843  ros2 param list /controller_manager
+ 1844  ros2 topic list
+ 1845  ros2 topic echo /scan
+ 1846  ros2 node list
+ 1847  ros2 node info /turtlebot4_node
+ 1848  sudo apt install fastdds
+ 1849  ros2 topic info /scan
+ 1850  ros2 node list
+ 1851  cd src/dream_rover/
+ 1852  more jack_readme.txt
+ 1853  emacs dreamerv3/configs.yaml &
+ 1854  nvidia-smi -l
+ 1855  ros2 topic list
+ 1856  ros2 topic echo /scan > scan_out.txt 
+ 1857  emacs scan_out.txt &
+ 1858  rm scan_out.txt 
+ 1859  emacs embodied/envs/turtlebot.py &
+ 1860  emacs dreamerv3/main.py &
+ 1861  rqt_graph
+ 1862  emacs dreamerv3/configs.yaml &
+ 1863  ros2 topic echo
+ 1864  ros2 topic list
+ 1865  ros2 topic info /scan
+ 1866  ros2 topic echo /scan
+ 1867  ros2 topic echo /turtlebot4/robot_state
+ 1868  ros2 nodes
+ 1869  ros2 nodes list
+ 1870  ros2 topic info /cmd_vel
+ 1871  ros2 control list_controllers
+ 1872  ls
+ 1873  conda activate jax
+ 1874  cd src/dream_rover/
+ 1875  more jack_readme.txt
+ 1876  python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
+ 1877  history
+ 1878  python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
+ 1879  grep -r '(270,)
+ 1880  grep -r '(270,)'
+ 1881  python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
+ 1882  grep -r '270'
+ 1883  emacs dreamerv3/configs.yaml &
+ 1884  rm -rf ~/logdir/
+ 1885  python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
+ 1886  pushup
+ 1887  python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
+ 1888  rm ~/logdir/
+ 1889  rm -rf ~/logdir/
+ 1890  python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
+ 1891  history
+ 1892  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1893  ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController "{start_controllers: ['joint_state_broadcaster'], stop_controllers: [], strictness: 1, start_asap: false, timeout: {sec: 5, nanosec: 0}}"
+ 1894  ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController "{start_controllers: ['diffdrive_controller'], stop_controllers: [], strictness: 1, start_asap: false, timeout: {sec: 5, nanosec: 0}}"
+ 1895  ros2 control list_controllers
+ 1896  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1897  ros2 topic echo /controller_manager/list_controllers
+ 1898  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1899  ros2 topic list
+ 1900  emacs temp_scan_check.py &
+ 1901  python temp_scan_check.py 
+ 1902  emacs ../src/notes/jack_notesRover.txt &
+ 1903  ls
+ 1904  python temp_scan_check.py 
+ 1905  ps aux | grep rplidar
+ 1906  ps -u
+ 1907  ros2 topic echo /scan --once
+ 1908  ssh ubuntu@192.168.1.241
+ 1909  sudo mkdir /etc/turtlebot4/
+ 1910  sudo touch /etc/turtlebot4/setup.bash
+ 1911  emacs /etc/turtlebot4/setup.bash
+ 1912  sudo vi /etc/turtlebot4/setup.bash
+ 1913  emacs .bashrc &
+ 1914  source /etc/turtlebot4/setup.bash
+ 1915  ros2 topic list
+ 1916  ros2 topic list
+ 1917  teleop_twist_keyboard
+ 1918  history > ros_history.txt 
+ 1919  emacs ros_history.txt &
+ 1920  ros2 run teleop_twist_keyboard
+ 1921  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1922  ros2 node list
+ 1923  rqt_graph
+ 1924  ros2 topic echo /rosout
+ 1925  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1926  ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+ 1927  ros2 node list
+ 1928  ros2 topic list
+ 1929  ros echo /cmd_vel
+ 1930  cd src/dream_rover/
+ 1931  ros2 topic list
+ 1932  ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r __ns:=/yosemite
+ 1933  cd ~/Dropbox/
+ 1934  ls
+ 1935  cd phd_2024/
+ 1936  ls
+ 1937  cd publications/
+ 1938  ls
+ 1939  grep -r 'object search'
+ 1940  grep -r 'search'
+ 1941  grep -r 'Object Search'
+ 1942  cd ros2_ws
+ 1943  history
+ 1944  cd ../src/dream_rover/
+ 1945  ls
+ 1946  emacs jack_readme.txt &
+ 1947  ssh ubuntu@192.168.1.243
+ 1948  ssh ubuntu@192.168.1.241
+ 1949  emacs ~/.ssh/known_hosts
+ 1950  ssh ubuntu@192.168.1.241
+ 1951  rm ~/.ssh/known_hosts
+ 1952  ssh ubuntu@192.168.1.241
+ 1953  ros2 topic list
+ 1954  cd temp/
+ 1955  wget -qO - https://raw.githubusercontent.com/turtlebot/turtlebot4_setup/humble/turtlebot4_discovery/configure_discovery.sh | bash <(cat) </dev/tty
+ 1956  cd ..
+ 1957  source ~/.bashrc
+ 1958  ros2 daemon stop; ros2 daemon start
+ 1959  ros2 topic list
+ 1960  sudo apt update
+ 1961  ros2 topic list
+ 1962  ssh ubuntu@192.168.1.241
+ 1963  ros2 topic list
+ 1964  emacs src/dream_rover/jack_readme.txt &
+ 1965  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1966  ros2 topic list
+ 1967  ros node list
+ 1968  ros2 node list
+ 1969  ros2 param list /turtlebot4_node
+ 1970  ros2 topic echo /create3/motion_control/status
+ 1971  ps aux | grep controller_manager
+ 1972  ros2 topic echo /wheel_status
+ 1973  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ 1974  cd ~/Dropbox/ros2 topic pub /cmd_vel geometry_msgs/msg/TwistStamped "{header: {stamp: {sec: 0, nanosec: 0}}, twist: {linear: {x: -0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}" --once
+ 1975  ros2 topic pub /cmd_vel geometry_msgs/msg/TwistStamped "{header: {stamp: {sec: 0, nanosec: 0}}, twist: {linear: {x: -0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}" --once
+ 1976  cd Dropbox/phd_2024/publications/
+ 1977  ls
+ 1978  mv Tracked_chassis/ off_road
+ 1979  mv outdoor_robots/2202.12873v4.pdf off_road/
+ 1980  ls -l /dev/i2c-3
+ 1981  sudo usermod -aG i2c $USER
+ 1982  ssh ubuntu@192.168.1.241
+ 1983  cd Dropbox/phd_2024/publications/
+ 1984  ls
+ 1985  mkdir Outdoor_robots
+ 1986  mv ~/Downloads/2202.12873v4.pdf Outdoor_robots/
+ 1987  mv Outdoor_robots/ outdoor_robots
+ 1988  grep -r 'terrain'
+ 1989  cd ~/temp/
+ 1990  ls -lsrt
+ 1991  sudo dpkg -i pdfgrep_2.1.2-1build1_amd64.deb 
+ 1992  which pdfgrep
+ 1993  cd ~/Dropbox/phd_2024/publications/
+ 1994  ls
+ 1995  pdfgrep -r 'terrain'
+ 1996  cd
+ 1997  cd src/
+ 1998  ls -lsrt
+ 1999  cd src/dream_rover/
+ 2000  ls
+ 2001  git add --all
+ 2002  git commit -m 'back from CO'
+ 2003  git push
+ 2004  emacs dreamerv3/configs.yaml &
+ 2005  emacs embodied/envs/turtlebot.py &
+ 2006  meacs dreamerv3/main.py &
+ 2007  emacs dreamerv3/main.py &
+ 2008  ros2 topic list
+ 2009  more dreamerv3/agent.py 
+ 2010  grep -r ros
+ 2011  grep -r rlcp
+ 2012  grep -r rclpy
+ 2013  ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
+ 2014  echo $GAZEBO_MODEL_PATH
+ 2015  history > his.txt 

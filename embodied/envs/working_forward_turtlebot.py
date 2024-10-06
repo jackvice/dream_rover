@@ -28,24 +28,11 @@ class Turtlebot(embodied.Env):
         self._step = 0
         self._received_scan = False
         self.first = False
-        self.desired_distance = 1.0
         
         # Check for actual connection to the robot
         self._robot_connected = self._check_robot_connection(timeout=connection_check_timeout)
         if not self._robot_connected:
             self.node.get_logger().warn("No actual robot detected. Running in simulation mode.")
-
-
-    def get_reward(self):
-        if self.lidar_data is None:
-            return 0.0
-        
-        # Get the minimum distance to an obstacle from the LIDAR data
-        min_distance = np.nanmin(self.lidar_data)
-        
-        # Calculate reward based on how close the min_distance is to the desired_distance
-        reward = -((min_distance - self.desired_distance) ** 2)  # Gaussian-shaped reward
-        return reward
 
     def _check_robot_connection(self, timeout):
         start_time = time.time()
@@ -109,14 +96,9 @@ class Turtlebot(embodied.Env):
             return self._obs(0.0, is_first=True)
         
         twist = Twist()
-        twist.linear.x = action['linear_velocity']
-        twist.angular.z = action['angular_velocity']
+        twist.linear.x = 0.05 #action['linear_velocity']
+        twist.angular.z = 0.0 #action['angular_velocity']
         self.publisher.publish(twist)
-        # Wait for some time to simulate step duration
-        time.sleep(0.1)
-        
-        # Calculate reward
-        reward = self.get_reward()
 
         if self._robot_connected:
             # Wait for scan data only if robot is connected
@@ -127,7 +109,7 @@ class Turtlebot(embodied.Env):
             # Simulate more realistic scan data if no robot is connected
             self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
                                                 self.lidar_points).astype(np.float32)
-
+        time.sleep(0.1)
         self._step += 1
         reward = self._calculate_reward()
         self._done = (self._step >= self._length)
