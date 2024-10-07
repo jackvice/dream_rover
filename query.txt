@@ -1,0 +1,78 @@
+For the below reward function, I would like to simplify it to keep the closest obstacle at the desired distance reguardless of what side.  and keeping the forward velocity reward.
+
+    def get_reward(self):
+        # Ensure angle information is available
+        if not hasattr(self, 'angle_min'):
+            return 0.0  # Cannot compute reward without angle information
+
+        # Compute the angles for each lidar point
+        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
+
+        # Set parameters for wall-following on the right side
+        side_angle = -np.pi / 2  # Right side (-90 degrees)
+        angle_tolerance = np.pi / 4  # 45 degrees
+
+        # Find indices of lidar points within the desired angle range
+        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
+
+        # If no points are found, set distance_reward to zero
+        if len(side_indices) == 0:
+            distance_reward = 0.0
+        else:
+            # Get distances at those indices
+            side_distances = self.lidar_data[side_indices]
+
+            # Filter out invalid distances
+            valid_distances = side_distances[(side_distances > 0.1) &
+                                         (side_distances < self.max_lidar_range)]
+            if len(valid_distances) == 0:
+                distance_reward = 0.0
+            else:
+                # Calculate the mean distance to the wall
+                mean_distance = np.mean(valid_distances)
+                
+                # Calculate the error from the desired distance
+                error = mean_distance - self.desired_distance
+
+                # Define maximum acceptable error
+                max_error = 1.0  # Assume 1 meter is a reasonable maximum error for wall-following
+
+                # Normalize error to be between -1 and 1
+                normalized_error = error / max_error
+                normalized_error = np.clip(normalized_error, -1.0, 1.0)
+
+                # Calculate reward with a sharper penalty for deviation
+                distance_reward = np.exp(-np.abs(normalized_error) * 3)
+
+        # Encourage forward movement
+        forward_velocity = self.last_linear_velocity
+        max_velocity = self.act_space['linear_velocity'].high
+        if max_velocity == 0:
+            max_velocity = 1e-6  # Prevent division by zero
+
+        # Normalize the forward velocity to [0, 1]
+        normalized_velocity = forward_velocity / max_velocity
+        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
+
+        # Weight factors for distance and velocity rewards
+        alpha = 0.5  # Weight for distance reward
+        beta = 0.5   # Weight for velocity reward
+
+        # Combined reward
+        combined_reward = (alpha * distance_reward) + (beta * normalized_velocity)
+
+        # Collision penalty - penalize if the robot is too close to any obstacle
+        collision_threshold = 0.2  # Define a threshold for collision (e.g., 20 cm)
+        min_distance = np.nanmin(self.lidar_data)  # Get the minimum distance from the LIDAR data
+        if min_distance < collision_threshold:
+            collision_penalty = -0.5  # Apply a negative reward for being too close to an obstacle
+            combined_reward += collision_penalty
+
+        # Print debug info every 1000 steps
+        if self.total_steps % 1000 == 0:
+            print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
+                  '   +     beta', beta, '* normalized_velocity', normalized_velocity,
+                  '   +     collision_penalty',
+                  collision_penalty if min_distance < collision_threshold else 0)
+
+        return combined_reward
