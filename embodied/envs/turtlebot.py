@@ -36,7 +36,7 @@ class Turtlebot(embodied.Env):
         self._step = 0
         self._received_scan = False
         self.first = False
-        self.desired_distance = 1.0
+        self.desired_distance = 1.3
         self.total_steps = 0
         self.highest_reward = -1.0
         self.lowest_reward = 1.0
@@ -130,6 +130,7 @@ class Turtlebot(embodied.Env):
         
         # Wait for some time to simulate step duration
         time.sleep(0.1)
+        #time.sleep(0.05)
         
 
         if self._robot_connected:
@@ -153,7 +154,9 @@ class Turtlebot(embodied.Env):
         if self.total_steps % 1000 == 0:
             print('steps', self.total_steps,'highest reward',self.highest_reward,
                   'lowest reward',self.lowest_reward, 'current reward', reward)
-            print('lidar', self.lidar_data)
+            #print('lidar', self.lidar_data)
+            print('Minimum lidar value:', np.nanmin(self.lidar_data))
+
 
             
         self._step += 1
@@ -175,6 +178,50 @@ class Turtlebot(embodied.Env):
         return obs
 
     def get_reward(self):
+        if self.lidar_data is None:
+            return 0.0
+        
+        # Get the minimum distance to an obstacle from the LIDAR data
+        min_distance = np.nanmin(self.lidar_data)
+
+        # Collision penalty if too close to an obstacle
+        collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
+        if min_distance < collision_threshold:
+            return -0.1  # small negative reward for collision to strongly discourage it
+        
+        # Calculate reward based on how close the min_distance is to the desired_distance
+        error = np.abs(min_distance - self.desired_distance)
+        max_error = self.max_lidar_range - self.desired_distance
+        if max_error == 0:
+            max_error = 1e-6  # Prevent division by zero
+
+        # Normalize error to be between 0 and 1
+        normalized_error = error / max_error
+        normalized_error = np.clip(normalized_error, 0.0, 1.0)
+
+        # Invert and shift to make reward range between 0 and 1
+        distance_reward = 1.0 - normalized_error
+
+        # Encourage forward movement
+        forward_velocity = self.last_linear_velocity
+        max_velocity = self.act_space['linear_velocity'].high
+        if max_velocity == 0:
+            max_velocity = 1e-6  # Prevent division by zero
+
+        # Normalize the forward velocity to [0, 1]
+        normalized_velocity = forward_velocity / max_velocity
+        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
+        
+        # Weight factors for distance and velocity rewards
+        alpha = 0.5  # Weight for distance reward
+        beta = 0.5   # Weight for velocity reward
+
+        # Combined reward
+        combined_reward = alpha * distance_reward + beta * normalized_velocity
+        
+        return combined_reward
+    
+    def get_reward_right_side_wall(self):
         # Ensure angle information is available
         if not hasattr(self, 'angle_min'):
             return 0.0  # Cannot compute reward without angle information
@@ -250,294 +297,4 @@ class Turtlebot(embodied.Env):
                   collision_penalty if min_distance < collision_threshold else 0)
 
         return combined_reward
-
-
-
-    def get_reward_no_bump_reward(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
-
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 4  # 45 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, set distance_reward to zero
-        if len(side_indices) == 0:
-            distance_reward = 0.0
-        else:
-            # Get distances at those indices
-            side_distances = self.lidar_data[side_indices]
-            
-            # Filter out invalid distances
-            valid_distances = side_distances[(side_distances > 0.1) &
-                                             (side_distances < self.max_lidar_range)]
-            if len(valid_distances) == 0:
-                distance_reward = 0.0
-            else:
-                # Calculate the mean distance to the wall
-                mean_distance = np.mean(valid_distances)
-
-                # Calculate the error from the desired distance
-                error = mean_distance - self.desired_distance
-
-                # Define maximum acceptable error
-                max_error = 1.0  # Assume 1 meter is a reasonable maximum error for wall-following
-
-                # Normalize error to be between -1 and 1
-                normalized_error = error / max_error
-                normalized_error = np.clip(normalized_error, -1.0, 1.0)
-
-                # Calculate reward with a sharper penalty for deviation
-                distance_reward = np.exp(-np.abs(normalized_error) * 3)
-
-        # Encourage forward movement
-        forward_velocity = self.last_linear_velocity
-        max_velocity = self.act_space['linear_velocity'].high
-        #print('forward_velicoty', forward_velocity,'max_velocity', max_velocity)
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-
-        # Weight factors for distance and velocity rewards
-        alpha = 0.5  # Weight for distance reward
-        beta = 0.5   # Weight for velocity reward
-
-        # Combined reward
-        if self.total_steps % 1000 == 0:
-            print('alpha', alpha, '* distance_reward', round(distance_reward,3),
-                  '   +     beta',  beta, '* normalized_velocity',  normalized_velocity)
-        combined_reward = (alpha * distance_reward) + (beta * normalized_velocity)
-        
-        return combined_reward
-    
-    """
-    def simple_get_reward(self):
-        if self.lidar_data is None:
-            return 0.0
-        
-        # Get the minimum distance to an obstacle from the LIDAR data
-        min_distance = np.nanmin(self.lidar_data)
-        
-        # Calculate reward based on how close the min_distance is to the desired_distance
-        error = np.abs(min_distance - self.desired_distance)
-        max_error = self.max_lidar_range - self.desired_distance
-        if max_error == 0:
-            max_error = 1e-6  # Prevent division by zero
-
-        # Normalize error to be between 0 and 1
-        normalized_error = error / max_error
-        normalized_error = np.clip(normalized_error, 0.0, 1.0)
-
-        # Invert and shift to make reward range between 0 and 1
-        distance_reward = 1.0 - normalized_error
-
-        # Encourage forward movement
-        forward_velocity = getattr(self, 'last_linear_velocity', 0.0)  # stored in 'step' method
-        max_velocity = self.act_space['linear_velocity'].high  # Max possible linear velocity
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-        
-        # Weight factors for distance and velocity rewards
-        alpha = 0.7  # Weight for distance reward
-        beta = 0.3   # Weight for velocity reward
-
-        # Combined reward
-        combined_reward = alpha * distance_reward + beta * normalized_velocity
-        
-        return combined_reward
-    
-    def _calculate_reward_69only(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
-
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 8  # 22.5 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, set distance_reward to zero
-        if len(side_indices) == 0:
-            distance_reward = 0.0
-        else:
-            # Get distances at those indices
-            side_distances = self.lidar_data[side_indices]
-
-            # Filter out invalid distances
-            valid_distances = side_distances[(side_distances > 0.1) &
-                                         (side_distances < self.max_lidar_range)]
-            if len(valid_distances) == 0:
-                distance_reward = 0.0
-            else:
-                # Calculate the mean distance to the wall
-                mean_distance = np.mean(valid_distances)
-
-                # Calculate the error from the desired distance
-                error = mean_distance - self.desired_distance
-
-                # Define maximum acceptable error
-                max_error = self.max_lidar_range - self.desired_distance
-                if max_error == 0:
-                    max_error = 1e-6  # Prevent division by zero
-
-                # Normalize error to be between -1 and 1
-                normalized_error = error / max_error
-                normalized_error = np.clip(normalized_error, -1.0, 1.0)
-
-                # Invert and shift to make reward range between -1 and 1
-                distance_reward = 1.0 - np.abs(normalized_error) * 2  # Reward is between -1 and 1
-
-        # Encourage forward movement
-        forward_velocity = getattr(self, 'last_linear_velocity', 0.0)  #stored in 'step' method
-        max_velocity = self.act_space['linear_velocity'].high  #Max possible linear velocity
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-        
-        # Weight factors for distance and velocity rewards
-        alpha = 0.7  # Weight for distance reward
-        beta = 0.3   # Weight for velocity reward
-
-        # Combined reward
-        combined_reward = alpha * distance_reward + beta * normalized_velocity
-            
-        return combined_reward
-
-    
-    def _calculate_reward_old(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
-
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 8  # 22.5 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, return a neutral reward
-        if len(side_indices) == 0:
-            return 0.0
-
-        # Get distances at those indices
-        side_distances = self.lidar_data[side_indices]
-
-        # Filter out invalid distances
-        valid_distances = side_distances[(side_distances > 0.1) &
-                                         (side_distances < self.max_lidar_range)]
-        if len(valid_distances) == 0:
-            return 0.0
-
-        # Calculate the mean distance to the wall
-        mean_distance = np.mean(valid_distances)
-
-        # Calculate the error from the desired distance
-        error = mean_distance - self.desired_distance
-
-        # Define maximum acceptable error
-        max_error = self.max_lidar_range - self.desired_distance
-
-        # Normalize error to be between -1 and 1
-        normalized_error = error / max_error
-        normalized_error = np.clip(normalized_error, -1.0, 1.0)
-
-        # Invert and shift to make reward range between -1 and 1
-        reward = 1.0 - np.abs(normalized_error) * 2  # Reward is between -1 and 1
-
-        # Encourage forward movement
-        forward_velocity = self.last_linear_velocity  # last action's linear velocity
-        max_velocity = self.act_space['linear_velocity'].high  # Maximum possible linear velocity
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity  # Assuming velocities are positive
-
-        # Optionally clip to [0, 1] in case of negative velocities
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-
-        # Weight factors for distance and velocity rewards
-        alpha = 0.5  # Weight for distance reward
-        beta = 0.5   # Weight for velocity reward
-
-        # Combined reward
-        combined_reward = alpha * reward + beta * normalized_velocity
-
-        
-        return combined_reward
-
-    
-    def _calculate_reward_minus1_to_zero(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
-
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 8  # 22.5 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, return a neutral reward
-        if len(side_indices) == 0:
-            return 0.0
-
-        # Get distances at those indices
-        side_distances = self.lidar_data[side_indices]
-
-        # Filter out invalid distances
-        valid_distances = side_distances[(side_distances > 0.1) &
-                                         (side_distances < self.max_lidar_range)]
-        if len(valid_distances) == 0:
-            return 0.0
-
-        # Calculate the mean distance to the wall
-        mean_distance = np.mean(valid_distances)
-
-        # Calculate the maximum possible error
-        max_error = self.max_lidar_range - self.desired_distance
-
-        # Calculate the error from the desired distance
-        error = mean_distance - self.desired_distance
-
-        # Normalize the error to be between -1 and 1
-        normalized_error = error / max_error
-        normalized_error = np.clip(normalized_error, -1.0, 1.0)
-
-        # Reward is negative squared normalized error
-        reward = - (normalized_error ** 2)
-
-    """ 
-    def close(self):
-        self.node.destroy_node()
-        rclpy.shutdown()
-
 

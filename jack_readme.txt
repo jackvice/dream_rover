@@ -31,3 +31,6 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 # Files
 # robot urdf files: changed lidar from 640 to 64
 /opt/ros/humble/share/turtlebot4_description/urdf/
+
+#world file with update rate:
+/opt/ros/humble/share/nav2_simple_commander/warehouse.world
