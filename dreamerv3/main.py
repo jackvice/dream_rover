@@ -253,6 +253,7 @@ def make_env(config, index, **overrides):
             f"MemoryMaze-{task}-ExtraObs-v0", **kw
         ),
         "turtlebot": "embodied.envs.turtlebot:Turtlebot",
+        "rover": "embodied.envs.rover_zero:Rover",
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(":")
@@ -260,7 +261,7 @@ def make_env(config, index, **overrides):
         ctor = getattr(module, cls)
     kwargs = config.env.get(suite, {})
     kwargs.update(overrides)
-    print(f"Creating Turtlebot environment with kwargs: {kwargs}")  # Debug print
+    print(f"Creating environment with kwargs: {kwargs}")  # Debug print
     try:
         env = ctor(task, **kwargs)
         # Ensure the environment is fully initialized

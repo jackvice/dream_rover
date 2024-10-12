@@ -1,3 +1,8 @@
+
+python dreamerv3/main.py --configs rover --logdir ~/logdir/rover
+
+
+
 python dreamerv3/main.py \
   --logdir ~/logdir/{timestamp} \
   --configs atari \

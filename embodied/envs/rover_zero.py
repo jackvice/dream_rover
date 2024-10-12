@@ -7,7 +7,9 @@ import embodied
 import time
 from nav_msgs.msg import Odometry 
 
-class Turtlebot(embodied.Env):
+from transforms3d.euler import quat2euler
+
+class Rover(embodied.Env):
     def __init__(self, task, size=(64, 64), length=200, scan_topic='/scan',
                  cmd_vel_topic='/cmd_vel', odom_topic='/odom', connection_check_timeout=30,
                  lidar_points=640, max_lidar_range=12.0):
@@ -28,6 +30,13 @@ class Turtlebot(embodied.Env):
             10
         )
 
+        self.imu_subscriber = self.create_subscription(
+            Imu,
+            '/imu/data',
+            self.imu_callback,
+            10
+        )
+
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
         self.lidar_data = np.zeros(self.lidar_points, dtype=np.float32)
@@ -36,11 +45,12 @@ class Turtlebot(embodied.Env):
         self._step = 0
         self._received_scan = False
         self.first = False
-        self.desired_distance = 1.3
+        self.desired_distance = .5
         self.total_steps = 0
         self.highest_reward = -1.0
         self.lowest_reward = 1.0
         self.last_linear_velocity = 0.0
+        self.current_pitch = 0.0  # Initialize pitch angle
 
         # Check for actual connection to the robot
         self._robot_connected = self._check_robot_connection(timeout=connection_check_timeout)
@@ -48,6 +58,25 @@ class Turtlebot(embodied.Env):
             self.node.get_logger().warn("No actual robot detected. Running in simulation mode.")
 
 
+    def imu_callback(self, msg):
+        orientation_q = msg.orientation
+        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+        # transforms3d uses a different order for axes, specify 'sxyz' for standard
+        roll, pitch, yaw = quat2euler(*orientation_list, axes='sxyz')
+        self.current_pitch = pitch  # Update the current pitch
+        self.current_roll = roll    # Update the current roll
+    
+    
+    def imu_callback(self, msg):
+        """
+        Callback function to process incoming IMU data.
+        Converts quaternion orientation to Euler angles and updates the current pitch.
+        """
+        orientation_q = msg.orientation
+        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
+        self.current_pitch = pitch  # Update the current pitch
+        # Optionally, you can also store roll and yaw if needed
 
     def _check_robot_connection(self, timeout):
         start_time = time.time()
@@ -58,7 +87,6 @@ class Turtlebot(embodied.Env):
             if self._received_scan:
                 return True
         return False
-
 
     def odom_callback(self, msg):
         # Get the current linear velocity from odometry data
@@ -108,7 +136,7 @@ class Turtlebot(embodied.Env):
     @property
     def act_space(self):
         return {
-            'linear_velocity': embodied.Space(np.float32, (), -1, 1),
+            'linear_velocity': embodied.Space(np.float32, (),-0.2, 0.6), # -1, 1),
             'angular_velocity': embodied.Space(np.float32, (), -1, 1),
             'reset': embodied.Space(bool),
         }
@@ -130,7 +158,7 @@ class Turtlebot(embodied.Env):
         
         # Wait for some time to simulate step duration
         #time.sleep(0.1)
-        time.sleep(0.03)
+        #time.sleep(0.025)
         
 
         if self._robot_connected:
@@ -180,17 +208,19 @@ class Turtlebot(embodied.Env):
     def get_reward(self):
         if self.lidar_data is None:
             return 0.0
-        good_distance = 0.1
         
-        # Get the minimum distance to an obstacle from the LIDAR data
-        min_distance = np.nanmin(self.lidar_data)
+        forward_velocity = self.last_linear_velocity
+        collision_threshold = 0.2  # Threshold distance is applied (e.g., 20 cm)
+        reverse_threshold = -0.1  # Allow small backward movements
+        
+        if forward_velocity < reverse_threshold:
+            return 0.0
 
+        min_distance = np.nanmin(self.lidar_data) # Get the min distance to an obstacle 
         # Collision penalty if too close to an obstacle
-        collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
         if min_distance < collision_threshold:
             return -0.1  # small negative reward for collision to strongly discourage it
 
-        
         # Calculate reward based on how close the min_distance is to the desired_distance
         error = np.abs(min_distance - self.desired_distance)
         max_error = self.max_lidar_range - self.desired_distance
@@ -205,7 +235,6 @@ class Turtlebot(embodied.Env):
         distance_reward = 1.0 - normalized_error
 
         # Encourage forward movement
-        forward_velocity = self.last_linear_velocity
         max_velocity = self.act_space['linear_velocity'].high
         if max_velocity == 0:
             max_velocity = 1e-6  # Prevent division by zero
@@ -217,12 +246,7 @@ class Turtlebot(embodied.Env):
         # Weight factors for distance and velocity rewards
         alpha = 0.5  # Weight for distance reward
         beta = 0.4   # Weight for velocity reward
-
-        # Combined reward
         combined_reward = alpha * distance_reward + beta * normalized_velocity
-        if 1.1 < min_distance < 1.5:
-            combined_reward += good_distance
-
         
         if self.total_steps % 1000 == 0:
             print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
