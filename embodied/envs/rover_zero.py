@@ -3,9 +3,11 @@ import numpy as np
 import rclpy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import Imu
 import embodied
 import time
-from nav_msgs.msg import Odometry 
+from nav_msgs.msg import Odometry
+import math
 
 from transforms3d.euler import quat2euler
 
@@ -30,7 +32,7 @@ class Rover(embodied.Env):
             10
         )
 
-        self.imu_subscriber = self.create_subscription(
+        self.imu_subscriber = self.node.create_subscription(
             Imu,
             '/imu/data',
             self.imu_callback,
@@ -51,33 +53,20 @@ class Rover(embodied.Env):
         self.lowest_reward = 1.0
         self.last_linear_velocity = 0.0
         self.current_pitch = 0.0  # Initialize pitch angle
+        self.current_roll = 0.0   # Initialize roll angle
 
+        # Cooldown mechanism to prevent oscillations
+        self.cooldown_steps = 100  # Number of steps to wait before allowing another correction
+        self.steps_since_correction = self.cooldown_steps  # Initialize to allow immediate correction
+
+        
         # Check for actual connection to the robot
         self._robot_connected = self._check_robot_connection(timeout=connection_check_timeout)
         if not self._robot_connected:
             self.node.get_logger().warn("No actual robot detected. Running in simulation mode.")
 
 
-    def imu_callback(self, msg):
-        orientation_q = msg.orientation
-        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
-        # transforms3d uses a different order for axes, specify 'sxyz' for standard
-        roll, pitch, yaw = quat2euler(*orientation_list, axes='sxyz')
-        self.current_pitch = pitch  # Update the current pitch
-        self.current_roll = roll    # Update the current roll
     
-    
-    def imu_callback(self, msg):
-        """
-        Callback function to process incoming IMU data.
-        Converts quaternion orientation to Euler angles and updates the current pitch.
-        """
-        orientation_q = msg.orientation
-        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
-        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-        self.current_pitch = pitch  # Update the current pitch
-        # Optionally, you can also store roll and yaw if needed
-
     def _check_robot_connection(self, timeout):
         start_time = time.time()
         while not self._received_scan:
@@ -136,12 +125,85 @@ class Rover(embodied.Env):
     @property
     def act_space(self):
         return {
-            'linear_velocity': embodied.Space(np.float32, (),-0.2, 0.6), # -1, 1),
+            'linear_velocity': embodied.Space(np.float32, (),-0.2, 0.3), # -1, 1),
             'angular_velocity': embodied.Space(np.float32, (), -1, 1),
             'reset': embodied.Space(bool),
         }
 
+
+
+
     def step(self, action):
+        if action['reset'] or self._done:
+            self._step = 0
+            self._done = False
+            return self._obs(0.0, is_first=True)
+        self.total_steps += 1
+
+        # **New Logic: Check for climbing and adjust movement with cooldown**
+        climbing_status, climbing_severity = self.is_climbing_wall()  # Modify function to return severity if needed
+        if climbing_status and self.steps_since_correction >= self.cooldown_steps:
+            # Execute corrective action instead of agent's action
+            twist = Twist()
+            if climbing_status == 'forward':
+                # Execute a small reverse movement with angular correction
+                twist.linear.x = -0.05  # Reduced reverse velocity
+                twist.angular.z = -self.current_roll * 1.0  # Example angular correction
+                self.node.get_logger().info(
+                    f"Step {self.total_steps}: Forward climbing detected. Executing small reverse movement."
+                )
+            elif climbing_status == 'reverse':
+                # Execute a small forward movement with angular correction
+                twist.linear.x = 0.05  # Reduced forward velocity
+                twist.angular.z = self.current_roll * 1.0  # Example angular correction
+                self.node.get_logger().info(
+                    f"Step {self.total_steps}: Reverse climbing detected. Executing small forward movement."
+                )
+            self.publisher.publish(twist)
+            # Reset cooldown
+            self.steps_since_correction = 0
+        else:
+            # Normal operation: publish agent's action twist
+            twist = Twist()
+            twist.linear.x = float(action['linear_velocity'])
+            twist.angular.z = float(action['angular_velocity'])
+            self.publisher.publish(twist)
+            # Store the last linear velocity for reward calculation
+            self.last_linear_velocity = twist.linear.x
+            # Increment cooldown counter
+            self.steps_since_correction += 1
+
+        # Process sensor data
+        if self._robot_connected:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+            if not self._received_scan:
+                self.node.get_logger().warn("No scan data received")
+        else:
+            self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
+                                                self.lidar_points).astype(np.float32)
+
+        # Calculate reward
+        reward = self.get_reward()
+        # Update highest and lowest rewards for logging
+        if reward > self.highest_reward:
+            self.highest_reward = reward
+        if reward < self.lowest_reward:
+            self.lowest_reward = reward
+        if self.total_steps % 1000 == 0:
+            print('steps', self.total_steps, 'highest reward', self.highest_reward,
+                  'lowest reward', self.lowest_reward, 'current reward', reward)
+            print('Minimum lidar value:', np.nanmin(self.lidar_data))
+
+        self._step += 1
+        self._done = (self._step >= self._length)
+        return self._obs(
+            reward,
+            is_last=self._done,
+            is_terminal=self._done)
+
+
+    
+    def stepold(self, action):
         if action['reset'] or self._done:
             self._step = 0
             self._done = False
@@ -170,6 +232,33 @@ class Rover(embodied.Env):
             # Simulate more realistic scan data if no robot is connected
             self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
                                                 self.lidar_points).astype(np.float32)
+
+        # **New Logic: Check for climbing and adjust movement with cooldown**
+        climbing_status, climbing_severity = self.is_climbing_wall()  # Modify function to return severity if needed
+        if climbing_status and self.steps_since_correction >= self.cooldown_steps:
+            corrective_twist = Twist()
+            if climbing_status == 'forward':
+                # Execute a small reverse movement with angular correction
+                corrective_twist.linear.x = -0.05  # Reduced reverse velocity
+                corrective_twist.angular.z = -self.current_roll * 1.0  # Example angular correction
+                self.publisher.publish(corrective_twist)
+                self.node.get_logger().info(
+                    f"Step {self.total_steps}: Forward climbing detected. Executing small reverse movement."
+                )
+            elif climbing_status == 'reverse':
+                # Execute a small forward movement with angular correction
+                corrective_twist.linear.x = 0.05  # Reduced forward velocity
+                corrective_twist.angular.z = self.current_roll * 1.0  # Example angular correction
+                self.publisher.publish(corrective_twist)
+                self.node.get_logger().info(
+                f"Step {self.total_steps}: Reverse climbing detected. Executing small forward movement."
+                )
+        
+            # Reset cooldown
+            self.steps_since_correction = 0
+        else:
+            self.steps_since_correction += 1
+
 
         # Calculate reward
         reward = self.get_reward()
@@ -247,88 +336,190 @@ class Rover(embodied.Env):
         alpha = 0.5  # Weight for distance reward
         beta = 0.4   # Weight for velocity reward
         combined_reward = alpha * distance_reward + beta * normalized_velocity
-        
+
+
+        # Additional penalty for climbing
+ 
         if self.total_steps % 1000 == 0:
             print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
                   '   +     beta', beta, '* normalized_velocity', normalized_velocity,)
         combined_reward = np.clip(combined_reward, -1.0, 1.0) # clip just in case
         return combined_reward
 
-    
-    def get_reward_right_side_wall(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
 
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 4  # 45 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, set distance_reward to zero
-        if len(side_indices) == 0:
-            distance_reward = 0.0
-        else:
-            # Get distances at those indices
-            side_distances = self.lidar_data[side_indices]
-
-            # Filter out invalid distances
-            valid_distances = side_distances[(side_distances > 0.1) &
-                                         (side_distances < self.max_lidar_range)]
-            if len(valid_distances) == 0:
-                distance_reward = 0.0
+    def is_climbing_wall(self):
+        """
+        Determines if the rover is climbing a wall based on LIDAR data and IMU orientation.
+        Returns:
+        tuple: (climbing_status, severity)
+           climbing_status: 'forward', 'reverse', or False
+           severity: float indicating the degree of climbing
+        """
+        if self.lidar_data is None:
+            return False, 0.0
+        
+        min_distance = np.nanmin(self.lidar_data)
+        collision_threshold = 0.2  # meters
+        pitch_threshold = 0.2      # radians (~11.5 degrees)
+        roll_threshold = 0.2       # radians (~11.5 degrees)
+        print('pitch', self.current_pitch)
+        
+        is_too_close = min_distance < collision_threshold
+        is_pitch_steep = abs(self.current_pitch) > pitch_threshold
+        is_roll_steep = abs(self.current_roll) > roll_threshold
+        
+        climbing_status = False
+        severity = 0.0
+        
+        if is_too_close and (is_pitch_steep or is_roll_steep):
+            if self.current_pitch > pitch_threshold:
+                # Climbing forward
+                climbing_status = 'forward'
+                severity = self.current_pitch
+            elif self.current_pitch < -pitch_threshold:
+                # Climbing backward
+                climbing_status = 'reverse'
+                severity = abs(self.current_pitch)
             else:
-                # Calculate the mean distance to the wall
-                mean_distance = np.mean(valid_distances)
-                
-                # Calculate the error from the desired distance
-                error = mean_distance - self.desired_distance
+                # If pitch is not steep but roll is
+                if self.current_roll > roll_threshold:
+                    climbing_status = 'right_tilt'
+                    severity = self.current_roll
+                elif self.current_roll < -roll_threshold:
+                    climbing_status = 'left_tilt'
+                    severity = abs(self.current_roll)
 
-                # Define maximum acceptable error
-                max_error = 1.0  # Assume 1 meter is a reasonable maximum error for wall-following
+        return climbing_status, severity
 
-                # Normalize error to be between -1 and 1
-                normalized_error = error / max_error
-                normalized_error = np.clip(normalized_error, -1.0, 1.0)
 
-                # Calculate reward with a sharper penalty for deviation
-                distance_reward = np.exp(-np.abs(normalized_error) * 3)
+    
+    def is_climbing_wallOld(self):
+        """
+        Determine if the rover is climbing a wall based on lidar data and IMU orientation.
+        Returns:
+            str: 'forward' if climbing while moving forward,
+                 'reverse' if climbing while moving in reverse,
+                 False otherwise.
+        """
+        if self.lidar_data is None:
+            return False
+        
+        min_distance = np.nanmin(self.lidar_data)
+        collision_threshold = 0.2  # Threshold distance in meters
+        pitch_threshold = 0.2  # Threshold pitch in radians (~5.7 degrees)
+        roll_threshold = 0.1  # Threshold roll in radians (~5.7 degrees)
+        
+        # Define criteria for climbing
+        is_too_close = min_distance < collision_threshold
+        is_pitch_steep = abs(self.current_pitch) > pitch_threshold
+        is_roll_steep = abs(self.current_roll) > roll_threshold
+        is_moving_forward = self.last_linear_velocity > 0
+        is_moving_reverse = self.last_linear_velocity < 0
+        
+        # Climbing while moving forward
+        if is_too_close and (is_pitch_steep or is_roll_steep) and is_moving_forward:
+            return 'forward'
+        
+        # Climbing while moving in reverse
+        if is_too_close and (is_pitch_steep or is_roll_steep) and is_moving_reverse:
+            return 'reverse'
+        
+        return False
+    
+    def imu_callbackOld(self, msg):
+        """
+        Processes incoming IMU data by converting quaternion orientation to Euler angles.
+        Updates the current pitch and roll of the rover.
+        """
+        try:
+            # Extract quaternion components
+            quat = np.array([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
+        
+        
+            # Normalize the quaternion
+            norm = np.linalg.norm(quat)
+            if norm == 0:
+                raise ValueError("Received a zero-length quaternion")
+            quat_normalized = quat / norm
+        
 
-        # Encourage forward movement
-        forward_velocity = self.last_linear_velocity
-        max_velocity = self.act_space['linear_velocity'].high
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
+            # Convert to Euler angles (roll, pitch, yaw)
+            roll, pitch, yaw = quat2euler(*quat_normalized, axes='sxyz')
+        
+            # Update rover's pitch and roll
+            self.current_pitch, self.current_roll = pitch, roll
+        
+            # Log Euler angles
+            self.node.get_logger().debug(f"Euler Angles - Roll: {roll:.3f}, Pitch: {pitch:.3f}, Yaw: {yaw:.3f}")
+        
+        except Exception as e:
+            self.node.get_logger().error(f"Error processing IMU data: {e}")
 
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
 
-        # Weight factors for distance and velocity rewards
-        alpha = 0.5  # Weight for distance reward
-        beta = 0.5   # Weight for velocity reward
+    def imu_callback(self, msg):
+        """
+        Processes incoming IMU data by converting quaternion orientation to Euler angles.
+        Updates the current pitch and roll of the rover.
+        """
+        try:
+            # Extract quaternion components into a NumPy array for efficiency
+            quat = np.array([msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z])
+        
+            # Log the received quaternion
+            self.node.get_logger().debug(f"Received Quaternion: {quat}")
+        
+            # Compute the norm (magnitude) of the quaternion
+            norm = np.linalg.norm(quat)
+            if norm == 0:
+                raise ValueError("Received a zero-length quaternion")
+        
+            # Normalize the quaternion to unit length
+            quat_normalized = quat / norm
+        
+            # Log the normalized quaternion
+            self.node.get_logger().debug(f"Normalized Quaternion: {quat_normalized}")
+        
+            # Convert the normalized quaternion to Euler angles (roll, pitch, yaw)
+            roll, pitch, yaw = quat2euler(quat_normalized, axes='sxyz')
+        
+            # Update the rover's current pitch and roll
+            self.current_pitch = pitch
+            self.current_roll = roll
+        
+            # Log the computed Euler angles
+            self.node.get_logger().debug(f"Euler Angles - Roll: {roll:.3f}, Pitch: {pitch:.3f}, Yaw: {yaw:.3f}")
+        
+        except Exception as e:
+            self.node.get_logger().error(f"Error processing IMU data: {e}")
 
-        # Combined reward
-        combined_reward = (alpha * distance_reward) + (beta * normalized_velocity)
 
-        # Collision penalty - penalize if the robot is too close to any obstacle
-        collision_threshold = 0.2  # Define a threshold for collision (e.g., 20 cm)
-        min_distance = np.nanmin(self.lidar_data)  # Get the minimum distance from the LIDAR data
-        if min_distance < collision_threshold:
-            collision_penalty = -0.5  # Apply a negative reward for being too close to an obstacle
-            combined_reward += collision_penalty
+"""
+        # **New Logic: Check for climbing and adjust movement with cooldown**
+        climbing_status = self.is_climbing_wall()
+        if climbing_status and self.steps_since_correction >= self.cooldown_steps:
+            if climbing_status == 'forward':
+                # Execute a small reverse movement
+                corrective_twist = Twist()
+                corrective_twist.linear.x = -0.1  # Small reverse velocity
+                corrective_twist.angular.z = 0.0
+                self.publisher.publish(corrective_twist)
+                self.node.get_logger().info(
+                    f"Step {self.total_steps}: Forward climbing detected. doing small reverse movement."
+                )
+            elif climbing_status == 'reverse':
+                # Execute a small forward movement
+                corrective_twist = Twist()
+                corrective_twist.linear.x = 0.1  # Small forward velocity
+                corrective_twist.angular.z = 0.0
+                self.publisher.publish(corrective_twist)
+                self.node.get_logger().info(
+                    f"Step {self.total_steps}: Reverse climbing detected. doing small forward movement."
+                )
+            
+            # Reset cooldown
+            self.steps_since_correction = 0
+        else:
+            self.steps_since_correction += 1
 
-        # Print debug info every 1000 steps
-        if self.total_steps % 1000 == 0:
-            print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
-                  '   +     beta', beta, '* normalized_velocity', normalized_velocity,
-                  '   +     collision_penalty',
-                  collision_penalty if min_distance < collision_threshold else 0)
 
-        return combined_reward
-
+"""
