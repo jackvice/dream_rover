@@ -8,8 +8,11 @@ import embodied
 import time
 from nav_msgs.msg import Odometry
 import math
+from dreamerv3.utils import l2_distance
+
 
 from transforms3d.euler import quat2euler
+
 
 class Rover(embodied.Env):
     def __init__(self, task, size=(64, 64), length=200, scan_topic='/scan',
@@ -495,6 +498,9 @@ class Rover(embodied.Env):
         
         except Exception as e:
             self.node.get_logger().error(f"Error processing IMU data: {e}")
+
+
+
 
 
 """

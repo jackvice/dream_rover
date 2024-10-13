@@ -19,7 +19,13 @@ python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
 
 
 
+
 ################ ROS2
+
+ros2 launch roverrobotics_gazebo 4wd_rover_gazebo.launch.py
+
+#rviz2:  'Fixed Frame' set to lidar_link
+ros2 run rviz2 rviz2
 
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ros2 control list_controllers
@@ -39,3 +45,6 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 #world file with update rate:
 /opt/ros/humble/share/nav2_simple_commander/warehouse.world
+
+
+rozer map is 20 x 20 meters
