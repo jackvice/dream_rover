@@ -27,6 +27,7 @@ class Turtlebot(embodied.Env):
             self.odom_callback,
             10
         )
+        
 
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range

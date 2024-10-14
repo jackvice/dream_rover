@@ -22,9 +22,12 @@ class Rover(embodied.Env):
         rclpy.init()
         self.node = rclpy.create_node('turtlebot_controller')
         self.publisher = self.node.create_publisher(Twist, cmd_vel_topic, 10)
-        self.lidar_subscriber = self.node.create_subscription( LaserScan, scan_topic, self.lidar_callback, 10)
-        self.odom_subscription = self.node.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
-        self.imu_subscriber = self.node.create_subscription( Imu, '/imu/data', self.imu_callback, 10 )
+        self.lidar_subscriber = self.node.create_subscription( LaserScan, scan_topic,
+                                                               self.lidar_callback, 10)
+        self.odom_subscription = self.node.create_subscription(Odometry, odom_topic,
+                                                               self.odom_callback, 10)
+        self.imu_subscriber = self.node.create_subscription( Imu, '/imu/data',
+                                                             self.imu_callback, 10 )
 
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
