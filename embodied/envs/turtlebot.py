@@ -5,10 +5,12 @@ from geometry_msgs.msg import Twist #, Pose, PoseWithCovarianceStamped
 from sensor_msgs.msg import LaserScan
 import embodied
 import time
+import math
+from dreamerv3.utils import l2_distance
 from nav_msgs.msg import Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-
-
+from transforms3d.euler import quat2euler
+import jax.numpy as jnp
 
 class Turtlebot(embodied.Env):
     def __init__(self, task, size=(64, 64), length=200, scan_topic='/scan',
@@ -42,7 +44,6 @@ class Turtlebot(embodied.Env):
             qos_profile
         )
 
-        
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
         self.lidar_data = np.zeros(self.lidar_points, dtype=np.float32)
@@ -51,19 +52,135 @@ class Turtlebot(embodied.Env):
         self._step = 0
         self._received_scan = False
         self.first = False
-        self.desired_distance = 1.3
         self.total_steps = 0
         self.highest_reward = -1.0
         self.lowest_reward = 1.0
         self.last_linear_velocity = 0.0
-        self.position = [0.0, 0.0, 0.0]
+        self.turtle_position = (0.0, 0.0, 0.0)
+        self.old_distance_to_goal = 100
+        self.current_pitch = 0.0  # Initialize pitch angle
+        self.current_roll = 0.0   # Initialize roll angle
+        self.current_yaw = 0.0   # Initialize roll angle
+        self.point_num = 0
+        #self.point_nav_point = [( -14.0, -19.0 ), ( 0.0, 0.5 ), ( -5.0, 13.0), ( 0.0, 0.5 )]
+        self.point_nav_point = [( -13.0, -20.0 ), ( -13, -4.5 ), ( -5.0, 13.0), ( 0.0, 0.5 )]
         
         # Check for actual connection to the robot
         self._robot_connected = self._check_robot_connection(timeout=connection_check_timeout)
         if not self._robot_connected:
             self.node.get_logger().warn("No actual robot detected. Running in simulation mode.")
 
+    def step(self, action):
+        if action['reset'] or self._done:
+            self._step = 0
+            self._done = False
+            return self._obs(0.0, is_first=True)
+        self.total_steps += 1
+        
+        twist = Twist()
+        twist.linear.x = float(action['linear_velocity'])
+        twist.angular.z = float(action['angular_velocity'])
+        self.publisher.publish(twist)
 
+        # Store the last linear velocity for reward calculation
+        self.last_linear_velocity = twist.linear.x
+        
+        # Wait for some time to simulate step duration
+        #time.sleep(0.1)
+        #time.sleep(0.03)
+        
+        if self._robot_connected:
+            # Wait for scan data only if robot is connected
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+            if not self._received_scan:
+                self.node.get_logger().warn("No scan data received")
+        else:
+            # Simulate more realistic scan data if no robot is connected
+            self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
+                                                self.lidar_points).astype(np.float32)
+        # Calculate reward
+        reward = self.get_reward()
+        if reward > self.highest_reward:
+            self.highest_reward = reward
+
+        if reward < self.lowest_reward:
+            self.lowest_reward = reward
+            
+        if self.total_steps % 1000 == 0:
+            print('steps', self.total_steps,'highest reward',self.highest_reward,
+                  'lowest reward',self.lowest_reward, 'current reward', reward)
+            #print('lidar', self.lidar_data)
+            print('Minimum lidar value:', np.nanmin(self.lidar_data))
+
+        self._step += 1
+        self._done = (self._step >= self._length)
+        return self._obs(
+            reward,
+            is_last=self._done,
+            is_terminal=self._done)
+
+    def get_reward(self):
+        """             bump      back        closer           goal
+        Reward scaling -1.0, . . -0.001, 0.0 , 0.01, . . . .  . 1.0 
+        """
+        if self.lidar_data is None:
+            return 0.0
+        
+        collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
+        reverse_threshold = 0.0    # Allow small backward movements
+        
+        if self.last_linear_velocity < reverse_threshold:
+            return -0.001
+
+        min_distance = np.nanmin(self.lidar_data)  # Get the min distance to an obstacle 
+        # Collision penalty if too close to an obstacle
+        if min_distance < collision_threshold:
+            self.node.get_logger().info(
+                f"Step {self.total_steps}: Collision, Distance {min_distance}"
+            )
+            return -1.0  # small negative reward for collision to strongly discourage it
+
+        pointnav_reward = self.calc_point_nav_reward()
+        return jnp.clip(pointnav_reward, -1, 1)
+
+
+    def calc_point_nav_reward(self):
+        # Check if we are close enough to goal for success
+        current_goal = self.point_nav_point[self.point_num]
+        distance_to_goal = l2_distance((self.turtle_position[0], self.turtle_position[1]),
+                                       current_goal)
+
+        if distance_to_goal < 0.3:  # success
+            print('PointNav Goal achieved!')
+            self.point_num += 1
+            if self.point_num >= len(self.point_nav_point):
+                self.point_num = 0
+            self.old_distance_to_goal = l2_distance((self.turtle_position[0],
+                                                     self.turtle_position[1]),
+                                                    self.point_nav_point[self.point_num])
+            self._done = True
+            return 1.0  # max reward for achieving goal.
+
+        # Calculate if we are closer
+        if distance_to_goal < self.old_distance_to_goal:
+            progress = self.old_distance_to_goal - distance_to_goal
+            p_reward = progress * 10.0 # scaling factor for max 0.3
+        else:
+            p_reward = 0.005  # small neg reward for moving further
+
+        self.old_distance_to_goal = distance_to_goal  # Update the old distance
+
+        time_penality = -0.03
+
+        total_reward = p_reward + time_penality
+        
+        if self.total_steps % 100 == 0:
+            print('pointnav_reward:', p_reward, 'distance_to_goal:', distance_to_goal,
+                  'self.old_distance_to_goal:', self.old_distance_to_goal, 'my x:',
+                  self.turtle_position[0], 'my y:', self.turtle_position[1],
+                  'goal:', current_goal, 'p_reward', p_reward)
+        return total_reward
+    
 
     def _check_robot_connection(self, timeout):
         start_time = time.time()
@@ -80,18 +197,38 @@ class Turtlebot(embodied.Env):
         # Get the current linear velocity from odometry data
         self.last_linear_velocity = msg.twist.twist.linear.x
 
+
     def pose_callback(self, msg):
         position = msg.pose.pose.position
-        self.position[0] = position.x
-        self.position[1] = position.y
-        self.position[2] = position.z
+        self.turtle_position = (position.x, position.y, position.z)
 
-
+        # Extract quaternion components into a NumPy array for efficiency
+        quat = np.array([msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
+                         msg.pose.pose.orientation.y, msg.pose.pose.orientation.z])
+        # Log the received quaternion
+        self.node.get_logger().debug(f"Received Quaternion: {quat}")
         
-    def pose_callbackbroke(self, msg):
-        # Get the current linear velocity from odometry data
+        # Compute the norm (magnitude) of the quaternion
+        norm = np.linalg.norm(quat)
+        if norm == 0:
+            raise ValueError("Received a zero-length quaternion")
         
-        self.position = msg.pose.pose.position
+        # Normalize the quaternion to unit length
+        quat_normalized = quat / norm
+        
+        # Log the normalized quaternion
+        self.node.get_logger().debug(f"Normalized Quaternion: {quat_normalized}")
+        
+        # Convert the normalized quaternion to Euler angles (roll, pitch, yaw)
+        roll, pitch, yaw = quat2euler(quat_normalized, axes='sxyz')
+        
+        # Update the turtle's current pitch and roll
+        self.current_pitch = pitch
+        self.current_roll = roll
+        self.current_yaw = yaw         
+        
+        # Log the computed Euler angles
+        self.node.get_logger().debug(f"Roll: {roll:.3f}, Pitch: {pitch:.3f}, Yaw: {yaw:.3f}")
 
 
     def lidar_callback(self, msg):
@@ -122,10 +259,14 @@ class Turtlebot(embodied.Env):
         self._received_scan = True
         self.node.get_logger().debug(f"Received scan data. Shape: {self.lidar_data.shape}")
 
+        
     @property
     def obs_space(self):
         spaces = {
             'lidar': embodied.Space(np.float32, (self.lidar_points,), 0, self.max_lidar_range),
+            'odom': embodied.Space(np.float32, (3,)),
+            'imu': embodied.Space(np.float32, (3,)),
+            'goal': embodied.Space(np.float32, (2,)),
         }
         return {
             **spaces,
@@ -143,60 +284,13 @@ class Turtlebot(embodied.Env):
             'reset': embodied.Space(bool),
         }
 
-    def step(self, action):
-        if action['reset'] or self._done:
-            self._step = 0
-            self._done = False
-            return self._obs(0.0, is_first=True)
-        self.total_steps += 1
-        
-        twist = Twist()
-        twist.linear.x = float(action['linear_velocity'])
-        twist.angular.z = float(action['angular_velocity'])
-        self.publisher.publish(twist)
-
-        # Store the last linear velocity for reward calculation
-        self.last_linear_velocity = twist.linear.x
-        
-        # Wait for some time to simulate step duration
-        #time.sleep(0.1)
-        time.sleep(0.03)
-        
-
-        if self._robot_connected:
-            # Wait for scan data only if robot is connected
-            rclpy.spin_once(self.node, timeout_sec=0.1)
-            if not self._received_scan:
-                self.node.get_logger().warn("No scan data received")
-        else:
-            # Simulate more realistic scan data if no robot is connected
-            self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
-                                                self.lidar_points).astype(np.float32)
-
-        # Calculate reward
-        reward = self.get_reward()
-        if reward > self.highest_reward:
-            self.highest_reward = reward
-
-        if reward < self.lowest_reward:
-            self.lowest_reward = reward
-            
-        if self.total_steps % 1000 == 0:
-            print('steps', self.total_steps,'highest reward',self.highest_reward,
-                  'lowest reward',self.lowest_reward, 'current reward', reward)
-            #print('lidar', self.lidar_data)
-            print('Minimum lidar value:', np.nanmin(self.lidar_data))
-
-        self._step += 1
-        self._done = (self._step >= self._length)
-        return self._obs(
-            reward,
-            is_last=self._done,
-            is_terminal=self._done)
-
     def _obs(self, reward, is_first=False, is_last=False, is_terminal=False):
         obs = {
             'lidar': self.lidar_data,
+            'odom': np.array(self.turtle_position, dtype=np.float32),
+            'imu': np.array([self.current_pitch, self.current_roll, self.current_yaw],
+                            dtype=np.float32),
+            'goal': np.array(self.point_nav_point[self.point_num], dtype=np.float32),# x, y tuple
         }
         obs.update(
             reward=np.float32(reward),
@@ -204,135 +298,4 @@ class Turtlebot(embodied.Env):
             is_last=is_last,
             is_terminal=is_terminal)
         return obs
-
-    def get_reward(self):
-        if self.lidar_data is None:
-            return 0.0
-        good_distance = 0.1
-        
-        # Get the minimum distance to an obstacle from the LIDAR data
-        min_distance = np.nanmin(self.lidar_data)
-
-        # Collision penalty if too close to an obstacle
-        collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
-        if min_distance < collision_threshold:
-            return -0.1  # small negative reward for collision to strongly discourage it
-
-        
-        # Calculate reward based on how close the min_distance is to the desired_distance
-        error = np.abs(min_distance - self.desired_distance)
-        max_error = self.max_lidar_range - self.desired_distance
-        if max_error == 0:
-            max_error = 1e-6  # Prevent division by zero
-
-        # Normalize error to be between 0 and 1
-        normalized_error = error / max_error
-        normalized_error = np.clip(normalized_error, 0.0, 1.0)
-
-        # Invert and shift to make reward range between 0 and 1
-        distance_reward = 1.0 - normalized_error
-
-        # Encourage forward movement
-        forward_velocity = self.last_linear_velocity
-        max_velocity = self.act_space['linear_velocity'].high
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-        
-        # Weight factors for distance and velocity rewards
-        alpha = 0.5  # Weight for distance reward
-        beta = 0.4   # Weight for velocity reward
-
-        # Combined reward
-        combined_reward = alpha * distance_reward + beta * normalized_velocity
-        if 1.1 < min_distance < 1.5:
-            combined_reward += good_distance
-
-        
-        if self.total_steps % 1000 == 0:
-            print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
-                  '   +     beta', beta, '* normalized_velocity', normalized_velocity,)
-        combined_reward = np.clip(combined_reward, -1.0, 1.0) # clip just in case
-        return combined_reward
-
-    
-    def get_reward_right_side_wall(self):
-        # Ensure angle information is available
-        if not hasattr(self, 'angle_min'):
-            return 0.0  # Cannot compute reward without angle information
-
-        # Compute the angles for each lidar point
-        angles = np.arange(self.lidar_points) * self.angle_increment + self.angle_min
-
-        # Set parameters for wall-following on the right side
-        side_angle = -np.pi / 2  # Right side (-90 degrees)
-        angle_tolerance = np.pi / 4  # 45 degrees
-
-        # Find indices of lidar points within the desired angle range
-        side_indices = np.where(np.abs(angles - side_angle) <= angle_tolerance)[0]
-
-        # If no points are found, set distance_reward to zero
-        if len(side_indices) == 0:
-            distance_reward = 0.0
-        else:
-            # Get distances at those indices
-            side_distances = self.lidar_data[side_indices]
-
-            # Filter out invalid distances
-            valid_distances = side_distances[(side_distances > 0.1) &
-                                         (side_distances < self.max_lidar_range)]
-            if len(valid_distances) == 0:
-                distance_reward = 0.0
-            else:
-                # Calculate the mean distance to the wall
-                mean_distance = np.mean(valid_distances)
-                
-                # Calculate the error from the desired distance
-                error = mean_distance - self.desired_distance
-
-                # Define maximum acceptable error
-                max_error = 1.0  # Assume 1 meter is a reasonable maximum error for wall-following
-
-                # Normalize error to be between -1 and 1
-                normalized_error = error / max_error
-                normalized_error = np.clip(normalized_error, -1.0, 1.0)
-
-                # Calculate reward with a sharper penalty for deviation
-                distance_reward = np.exp(-np.abs(normalized_error) * 3)
-
-        # Encourage forward movement
-        forward_velocity = self.last_linear_velocity
-        max_velocity = self.act_space['linear_velocity'].high
-        if max_velocity == 0:
-            max_velocity = 1e-6  # Prevent division by zero
-
-        # Normalize the forward velocity to [0, 1]
-        normalized_velocity = forward_velocity / max_velocity
-        normalized_velocity = np.clip(normalized_velocity, 0.0, 1.0)
-
-        # Weight factors for distance and velocity rewards
-        alpha = 0.5  # Weight for distance reward
-        beta = 0.5   # Weight for velocity reward
-
-        # Combined reward
-        combined_reward = (alpha * distance_reward) + (beta * normalized_velocity)
-
-        # Collision penalty - penalize if the robot is too close to any obstacle
-        collision_threshold = 0.2  # Define a threshold for collision (e.g., 20 cm)
-        min_distance = np.nanmin(self.lidar_data)  # Get the minimum distance from the LIDAR data
-        if min_distance < collision_threshold:
-            collision_penalty = -0.5  # Apply a negative reward for being too close to an obstacle
-            combined_reward += collision_penalty
-
-        # Print debug info every 1000 steps
-        if self.total_steps % 1000 == 0:
-            print('alpha', alpha, '* distance_reward', round(distance_reward, 3),
-                  '   +     beta', beta, '* normalized_velocity', normalized_velocity,
-                  '   +     collision_penalty',
-                  collision_penalty if min_distance < collision_threshold else 0)
-
-        return combined_reward
 

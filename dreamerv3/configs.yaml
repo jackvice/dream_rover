@@ -288,18 +288,20 @@ turtlebot:
   task: turtlebot_v4
   run:
     train_ratio: 512
-    steps: 3e5
+    steps: 1e6
     num_envs: 1
   env:
     dmc:
       image: False
     lidar: True
     scan_topic: '/scan'
+    pose_topic: '/sim_ground_truth_pose'
+    imu_topic: '/sim_ground_truth_pose'
     connection_check_timeout: 30  # Wait 30 seconds for connection
     lidar_points: 640  # Set this to match your actual lidar configuration
     max_lidar_range: 100.0
-  enc.spaces: 'lidar'
-  dec.spaces: 'lidar'
+  enc.spaces: 'lidar|pose|imu|goal'
+  dec.spaces: 'lidar|pose|imu|goal'
   
 turtlebot_no_timeout:
   task: turtlebot_v4
