@@ -11,7 +11,7 @@ import yaml
 #from scipy.spatial.transform import Rotation as R
 from transforms3d import quaternions
 
-from igibson.utils.constants import CoordinateSystem
+#from igibson.utils.constants import CoordinateSystem
 
 # File I/O related
 

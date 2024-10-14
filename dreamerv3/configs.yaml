@@ -273,12 +273,16 @@ rover:
       image: False
     lidar: True
     scan_topic: '/scan'
+    odom_topic: '/odometry/wheels'
+    imu_topic: '/imu/data'
     cmd_vel_topic: '/cmd_vel'
     connection_check_timeout: 30  # Wait 30 seconds for connection
     lidar_points: 640  # Set this to match your actual lidar configuration
     max_lidar_range: 12.0
-  enc.spaces: 'lidar'
-  dec.spaces: 'lidar'
+  enc.spaces: 'lidar|odom|imu|goal'
+  dec.spaces: 'lidar|odom|imu|goal'
+  
+
   
 turtlebot:
   task: turtlebot_v4
@@ -291,7 +295,6 @@ turtlebot:
       image: False
     lidar: True
     scan_topic: '/scan'
-    cmd_vel_topic: '/cmd_vel'
     connection_check_timeout: 30  # Wait 30 seconds for connection
     lidar_points: 640  # Set this to match your actual lidar configuration
     max_lidar_range: 100.0
