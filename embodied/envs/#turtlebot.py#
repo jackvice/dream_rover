@@ -7,7 +7,7 @@ import embodied
 import time
 from nav_msgs.msg import Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-
+from transforms3d.euler import quat2euler
 
 
 class Turtlebot(embodied.Env):
@@ -29,6 +29,11 @@ class Turtlebot(embodied.Env):
             odom_topic,
             self.odom_callback,
             10
+        )
+        self.imu_subscriber = self.node.create_subscription(
+            Imu,
+            '/imu/data',
+            self.imu_callback, 10
         )
  
         # Define QoS profile
@@ -80,8 +85,10 @@ class Turtlebot(embodied.Env):
         # Get the current linear velocity from odometry data
         self.last_linear_velocity = msg.twist.twist.linear.x
 
+
     def pose_callback(self, msg):
         position = msg.pose.pose.position
+        robot_quat = msg.pose.pose.orientation
         self.position[0] = position.x
         self.position[1] = position.y
         self.position[2] = position.z
@@ -336,3 +343,41 @@ class Turtlebot(embodied.Env):
 
         return combined_reward
 
+    def imu_callback(self, msg):
+        """
+        Processes incoming IMU data by converting quaternion orientation to Euler angles.
+        Updates the current pitch and roll of the rover.
+        """
+        try:
+            # Extract quaternion components into a NumPy array for efficiency
+            quat = np.array([msg.orientation.w, msg.orientation.x, msg.orientation.y,
+                             msg.orientation.z])
+        
+            # Log the received quaternion
+            self.node.get_logger().debug(f"Received Quaternion: {quat}")
+        
+            # Compute the norm (magnitude) of the quaternion
+            norm = np.linalg.norm(quat)
+            if norm == 0:
+                raise ValueError("Received a zero-length quaternion")
+        
+            # Normalize the quaternion to unit length
+            quat_normalized = quat / norm
+        
+            # Log the normalized quaternion
+            self.node.get_logger().debug(f"Normalized Quaternion: {quat_normalized}")
+        
+            # Convert the normalized quaternion to Euler angles (roll, pitch, yaw)
+            roll, pitch, yaw = quat2euler(quat_normalized, axes='sxyz')
+        
+            # Update the rover's current pitch and roll
+            self.current_pitch = pitch
+            self.current_roll = roll
+            self.current_yaw = yaw
+            
+        
+            # Log the computed Euler angles
+            self.node.get_logger().debug(f"Euler Angles - Roll: {roll:.3f}, Pitch: {pitch:.3f}, Yaw: {yaw:.3f}")
+        
+        except Exception as e:
+            self.node.get_logger().error(f"Error processing IMU data: {e}")

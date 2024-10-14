@@ -1,21 +1,11 @@
+# Dream Rover commands:
 
 python dreamerv3/main.py --configs rover --logdir ~/logdir/rover
 
-
-
-python dreamerv3/main.py \
-  --logdir ~/logdir/{timestamp} \
-  --configs atari \
-  --run.train_ratio 32
-  
-
-python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs bipedalwalker
-
+python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
 
 
 python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
-
-python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
 
 
 
