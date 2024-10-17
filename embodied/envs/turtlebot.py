@@ -10,7 +10,7 @@ from dreamerv3.utils import l2_distance
 from nav_msgs.msg import Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from transforms3d.euler import quat2euler
-import jax.numpy as jnp
+#import jax.numpy as jnp
 
 class Turtlebot(embodied.Env):
     def __init__(self, task, size=(64, 64), length=200, scan_topic='/scan',
@@ -63,7 +63,7 @@ class Turtlebot(embodied.Env):
         self.current_yaw = 0.0   # Initialize roll angle
         self.point_num = 0
         #self.point_nav_point = [( -14.0, -19.0 ), ( 0.0, 0.5 ), ( -5.0, 13.0), ( 0.0, 0.5 )]
-        self.point_nav_point = [( -13.0, -20.0 ), ( -13, -4.5 )]
+        self.point_nav_point = [( 1.5, -11.0 ), ( -9, -11.0 )]
         
         # Check for actual connection to the robot
         self._robot_connected = self._check_robot_connection(timeout=connection_check_timeout)
@@ -87,7 +87,7 @@ class Turtlebot(embodied.Env):
         
         # Wait for some time to simulate step duration
         #time.sleep(0.1)
-        #time.sleep(0.03)
+        #time.sleep(0.3)
         
         if self._robot_connected:
             # Wait for scan data only if robot is connected
@@ -101,7 +101,7 @@ class Turtlebot(embodied.Env):
         # Calculate reward
         reward = self.get_reward()
         if reward > self.highest_reward:
-            print('################################# new high reward of', reward)
+            #print('################################# new high reward of', reward)
             self.highest_reward = reward
 
         if reward < self.lowest_reward:
@@ -128,23 +128,23 @@ class Turtlebot(embodied.Env):
             return 0.0
         
         collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
-        reverse_threshold = 0.25    # Allow small backward movements
+        reverse_threshold = -0.25    # Allow small backward movements
         
         if self.last_linear_velocity < reverse_threshold:
-            print('too much reverse', self.last_linear_velocity)
+            #print('too much reverse', self.last_linear_velocity)
             return -0.001
 
         min_distance = np.nanmin(self.lidar_data)  # Get the min distance to an obstacle 
         # Collision penalty if too close to an obstacle
         if min_distance < collision_threshold:
-            self.node.get_logger().info(
-                f"Step {self.total_steps}: Collision, Distance {min_distance}"
-            )
+            #self.node.get_logger().info(
+            #    f"Step {self.total_steps}: Collision, Distance {min_distance}"
+            #)
             return -1.0  # negative reward for collision to strongly discourage it
 
         pointnav_reward = self.calc_point_nav_reward()
             
-        return jnp.clip(pointnav_reward, -1, 1)
+        return np.clip(pointnav_reward, -1, 1)
 
 
     def calc_point_nav_reward(self):
@@ -167,20 +167,20 @@ class Turtlebot(embodied.Env):
         # Calculate if we are closer
         if distance_to_goal < self.old_distance_to_goal:
             progress = self.old_distance_to_goal - distance_to_goal
-            p_reward = progress * 10.0 # scaling factor for max 0.3
+            p_reward = progress * 8.0 # scaling factor for max 0.3
         else:
-            p_reward = 0.005  # small neg reward for moving further
+            p_reward = -0.05  # small neg reward for moving further
 
-        time_penality = -0.03
+        time_penality = -0.02
 
         total_reward = p_reward + time_penality
         
         if self.total_steps % 100 == 0 or total_reward >= 1.0:
-            print('linear_velocity', self.last_linear_velocity, 'pointnav_reward:',
-                  p_reward, 'distance_to_goal:', distance_to_goal,
-                  'self.old_distance_to_goal:', self.old_distance_to_goal, 'my x:',
-                  self.turtle_position[0], 'my y:', self.turtle_position[1],
-                  'goal:', current_goal, 'total_reward', total_reward)
+            print('linear_velocity', np.round(self.last_linear_velocity,3), ', pointnav_reward:',
+                  p_reward, ', distance_to_goal:', distance_to_goal,
+                  ', old_distance_to_goal:', self.old_distance_to_goal, ', my x,y:',
+                  np.round(self.turtle_position[0],3), ',', np.round(self.turtle_position[1], 3),
+                  'goal:', current_goal, 'total_reward', np.round(total_reward,3))
             
         self.old_distance_to_goal = distance_to_goal  # Update the old distance
 
@@ -302,5 +302,7 @@ class Turtlebot(embodied.Env):
             is_first=is_first,
             is_last=is_last,
             is_terminal=is_terminal)
+        if self.total_steps % 1000 == 0:
+            print('obs space: odom', obs['odom'], ',  imu', obs['imu'], ',  goal', obs['goal'])
         return obs
 

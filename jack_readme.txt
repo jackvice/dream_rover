@@ -22,6 +22,8 @@ ros2 control list_controllers
 
 ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
 
+ros2 run rqt_image_view rqt_image_view
+
 Fix contollers:
 ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController "{start_controllers: ['joint_state_broadcaster'], stop_controllers: [], strictness: 1, start_asap: false, timeout: {sec: 5, nanosec: 0}}"
 
