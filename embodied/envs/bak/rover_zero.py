@@ -10,6 +10,8 @@ from nav_msgs.msg import Odometry
 import math
 from dreamerv3.utils import l2_distance
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+
+
 from transforms3d.euler import quat2euler
 
 
@@ -80,14 +82,14 @@ class Rover(embodied.Env):
                 twist.linear.x = -0.1  # Reduced reverse velocity
                 twist.angular.z = -self.current_roll * 1.0  # Example angular correction
                 self.node.get_logger().info(
-                    f"Step {self.total_steps}: Forward climb. doing reverse. angle{self.current_pitch}"
+                    f"Step {self.total_steps}: Forward climbing. doing reverse movement. angle{self.current_pitch}"
                 )
             elif climbing_status == 'reverse':
                 # Execute a small forward movement with angular correction
                 twist.linear.x = 0.1  # Reduced forward velocity
                 twist.angular.z = self.current_roll * 1.0  # Example angular correction
                 self.node.get_logger().info(
-                    f"Step {self.total_steps}: Reverse climb. doiing forward. angle{self.current_pitch}"
+                    f"Step {self.total_steps}: Reverse climbing. doing forward movement. angle{self.current_pitch}"
                 )
             self.publisher.publish(twist)
             # Reset cooldown

@@ -10,8 +10,6 @@ from nav_msgs.msg import Odometry
 import math
 from dreamerv3.utils import l2_distance
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-
-
 from transforms3d.euler import quat2euler
 
 
@@ -82,14 +80,14 @@ class Rover(embodied.Env):
                 twist.linear.x = -0.1  # Reduced reverse velocity
                 twist.angular.z = -self.current_roll * 1.0  # Example angular correction
                 self.node.get_logger().info(
-                    f"Step {self.total_steps}: Forward climbing. doing reverse movement. angle{self.current_pitch}"
+                    f"Step {self.total_steps}: Forward climb. doing reverse. angle{self.current_pitch}"
                 )
             elif climbing_status == 'reverse':
                 # Execute a small forward movement with angular correction
                 twist.linear.x = 0.1  # Reduced forward velocity
                 twist.angular.z = self.current_roll * 1.0  # Example angular correction
                 self.node.get_logger().info(
-                    f"Step {self.total_steps}: Reverse climbing. doing forward movement. angle{self.current_pitch}"
+                    f"Step {self.total_steps}: Reverse climb. doiing forward. angle{self.current_pitch}"
                 )
             self.publisher.publish(twist)
             # Reset cooldown
@@ -138,7 +136,7 @@ class Rover(embodied.Env):
         if self.lidar_data is None:
             return 0.0
         
-        collision_threshold = 0.2  # Threshold distance is applied (e.g., 20 cm)
+        collision_threshold = 0.35  # Threshold distance is applied (e.g., 20 cm)
         reverse_threshold = 0.0    # Allow small backward movements
         
         if self.last_linear_velocity < reverse_threshold:
@@ -150,13 +148,70 @@ class Rover(embodied.Env):
             self.node.get_logger().info(
                 f"Step {self.total_steps}: Collision, Distance {min_distance}"
             )
-            return -0.1  # small negative reward for collision to strongly discourage it
+            return -0.2  # small negative reward for collision to strongly discourage it
 
-        pointnav_reward = self.calc_point_nav_reward() 
+        #pointnav_reward = self.calc_point_nav_reward()
+        # Wall-following reward
+        wall_reward = self.calc_wall_following_reward()
         
-        return pointnav_reward
+        #return pointnav_reward
+        return wall_reward
 
+    def calc_wall_following_reward(self):
+        desired_distance = 0.5  # Desired distance from the wall on the right (in meters)
+        lidar_ranges = self.lidar_data  # Assuming this is a NumPy array
+        num_readings = len(lidar_ranges)
+        
+        # Define the angle range for the right side
+        # Right side corresponds to angles around 270 degrees
+        # Since LiDAR scans from front (0 degrees) and increases counter-clockwise,
+        # right side indices are around index 480 (270 degrees)
+        
+        # Determine indices for right side (e.g., from 250 degrees to 290 degrees)
+        right_start_angle_deg = 250
+        right_end_angle_deg = 290
+        
+        # Degrees per index
+        degrees_per_index = 360 / num_readings
+        
+        # Convert degrees to indices
+        right_start_idx = int(right_start_angle_deg / degrees_per_index) % num_readings
+        right_end_idx = int(right_end_angle_deg / degrees_per_index) % num_readings
+        
+        if right_start_idx <= right_end_idx:
+            right_side_indices = np.arange(right_start_idx, right_end_idx + 1)
+        else:
+            # Handle wrapping around the array
+            right_side_indices = np.concatenate((
+                np.arange(right_start_idx, num_readings),
+                np.arange(0, right_end_idx + 1)
+            ))
+            
+        # Extract distances on the right side
+        right_distances = lidar_ranges[right_side_indices]
+        right_distances = right_distances[np.isfinite(right_distances)]  # Remove inf values
+        
+        if len(right_distances) == 0:
+            return 0.0  # No valid data on the right side
+        
+        average_distance = np.mean(right_distances)
 
+        # Calculate reward based on how close the average_distance is to the desired_distance
+        error = np.abs(average_distance - desired_distance)
+        max_error = lidar_ranges[np.isfinite(lidar_ranges)].max() - desired_distance
+        if max_error == 0:
+            max_error = 1e-6  # Prevent division by zero
+
+        # Normalize error to be between 0 and 1
+        normalized_error = error / max_error
+        normalized_error = np.clip(normalized_error, 0.0, 1.0)
+
+        # Invert to make reward decrease with increasing error
+        distance_reward = 1.0 - normalized_error
+
+        return distance_reward
+
+        
     def calc_point_nav_reward(self):
         # Check if we are close enough to goal for success
         current_goal = self.point_nav_point[self.point_num]
@@ -197,8 +252,10 @@ class Rover(embodied.Env):
             is_first=is_first,
             is_last=is_last,
             is_terminal=is_terminal)
-        if self.total_steps % 100 == 0:
+        if self.total_steps % 10_000 == 0:
+            print('lidar length',len(obs['lidar']))
             print(obs)
+            #exit()
         return obs
 
 

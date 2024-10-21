@@ -14,13 +14,17 @@ python dreamerv3/main.py --logdir ~/logdir/{timestamp} --configs dmc_proprio
 
 ros2 launch roverrobotics_gazebo 4wd_rover_gazebo.launch.py
 
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
+
 #rviz2:  'Fixed Frame' set to lidar_link
 ros2 run rviz2 rviz2
+
+ros2 run rqt_image_view rqt_image_view
 
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ros2 control list_controllers
 
-ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
+
 
 ros2 run rqt_image_view rqt_image_view
 
@@ -39,4 +43,11 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 /opt/ros/humble/share/nav2_simple_commander/warehouse.world
 
 
+
+colcon build --symlink-install
+
 rozer map is 20 x 20 meters
+
+# list ign topics
+ign topic -l
+
