@@ -148,7 +148,7 @@ class Rover(embodied.Env):
             self.node.get_logger().info(
                 f"Step {self.total_steps}: Collision, Distance {min_distance}"
             )
-            return -0.2  # small negative reward for collision to strongly discourage it
+            return -0.4  # small negative reward for collision to strongly discourage it
 
         #pointnav_reward = self.calc_point_nav_reward()
         # Wall-following reward
