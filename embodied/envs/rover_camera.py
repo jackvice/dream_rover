@@ -16,7 +16,7 @@ from transforms3d.euler import quat2euler
 
 
 class Rover(embodied.Env):
-    def __init__(self, task, size=(64, 64), length=200, scan_topic='/scan', imu_topic='/imu/data',
+    def __init__(self, task, size=(96, 96), length=200, scan_topic='/scan', imu_topic='/imu/data',
                  cmd_vel_topic='/cmd_vel', odom_topic='/odometry/wheels', camera_topic='/camera/image_raw',
                  connection_check_timeout=30,
                  lidar_points=640, max_lidar_range=12.0):
@@ -24,16 +24,41 @@ class Rover(embodied.Env):
         rclpy.init()
         self.bridge = CvBridge() 
         self.node = rclpy.create_node('turtlebot_controller')
-        self.publisher = self.node.create_publisher(Twist, cmd_vel_topic, 10)
-        self.lidar_subscriber = self.node.create_subscription( LaserScan, scan_topic,
-                                                               self.lidar_callback, 10)
-        self.odom_subscription = self.node.create_subscription(Odometry, odom_topic,
-                                                               self.odom_callback, 10)
-        self.imu_subscriber = self.node.create_subscription( Imu, imu_topic,
-                                                             self.imu_callback, 10 )
-        self.camera_subscriber = self.node.create_subscription( Camera, camera_topic,
-                                                             self.camera_callback, 10 )
 
+        self.publisher = self.node.create_publisher(
+            Twist,
+            cmd_vel_topic,
+            10
+        )
+        
+        self.lidar_subscriber = self.node.create_subscription(
+            LaserScan,
+            scan_topic,
+            self.lidar_callback,
+            10
+        )
+        
+        self.odom_subscription = self.node.create_subscription(
+            Odometry,
+            odom_topic,
+            self.odom_callback,
+            10
+        )
+        
+        self.imu_subscriber = self.node.create_subscription(
+            Imu,
+            imu_topic,
+            self.imu_callback,
+            10
+        )
+        
+        self.camera_subscriber = self.node.create_subscription(
+            Camera,
+            camera_topic,
+            self.camera_callback,
+            10
+        )
+        self.current_image = None  # Store the current camera image
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
         self.lidar_data = np.zeros(self.lidar_points, dtype=np.float32)
@@ -70,6 +95,13 @@ class Rover(embodied.Env):
 
     
     def step(self, action):
+        """
+        Perform the specified action and return the new observation, reward, done flag, and additional info.
+        Adds the current 96x96 camera image to the observation.
+        
+        :param action: Action to perform.
+        :return: Tuple (observation, reward, done, info).
+        """
         if action['reset'] or self._done:
             self._step = 0
             self._done = False
@@ -139,6 +171,11 @@ class Rover(embodied.Env):
 
 
     def get_reward(self):
+        """
+        Calculate the reward based on the current state of the rover.
+        
+        :return: The calculated reward.
+        """
         if self.lidar_data is None:
             return 0.0
         
@@ -217,7 +254,24 @@ class Rover(embodied.Env):
 
         return distance_reward
 
+    def camera_callback(self, msg: Image):
+        """
+        Callback function for processing incoming camera images. Stores the most recent image in 96x96 size.
         
+        :param msg: Image message from the camera.
+        """
+        try:
+            # Convert the ROS Image message to an OpenCV image
+            cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            # Resize the image to 96x96
+            resized_image = cv2.resize(cv_image, size)
+            # Store the resized image as the current observation
+            self.current_image = resized_image
+        except Exception as e:
+            self.node.get_logger().error(f"Failed to process image: {str(e)}")
+
+
+            
     def calc_point_nav_reward(self):
         # Check if we are close enough to goal for success
         current_goal = self.point_nav_point[self.point_num]
@@ -244,9 +298,32 @@ class Rover(embodied.Env):
                   'self.old_distance_to_goal:', self.old_distance_to_goal, 'my x:',
                   self.rover_position[0], 'my y:', self.rover_position[1], 'goal:', current_goal)
         return p_reward
-
     
     def _obs(self, reward, is_first=False, is_last=False, is_terminal=False):
+        """
+        Create and return the current observation of the environment.
+        
+        :param reward: The reward obtained.
+        :param is_first: Whether this is the first step of an episode.
+        :param is_last: Whether this is the last step of an episode.
+        :param is_terminal: Whether this is a terminal state.
+        :return: The current observation.
+        """
+        obs = {
+            'camera_image': self.current_image if self.current_image is not None else np.zeros((96, 96, 3), dtype=np.uint8)
+            'lidar': self.lidar_data,
+            'odom': np.array(self.rover_position, dtype=np.float32),
+            'imu': np.array([self.current_pitch, self.current_roll, self.current_yaw], dtype=np.float32),
+            'goal': np.array(self.point_nav_point[self.point_num], dtype=np.float32),
+        }
+        obs.update(
+            reward=np.float32(reward),
+            is_first=is_first,
+            is_last=is_last,
+            is_terminal=is_terminal)
+        return obs
+    
+    def old_obs(self, reward, is_first=False, is_last=False, is_terminal=False):
         obs = {
             'lidar': self.lidar_data,
             'odom': np.array(self.rover_position, dtype=np.float32),

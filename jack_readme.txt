@@ -22,8 +22,11 @@ ros2 run rviz2 rviz2
 ros2 run rqt_image_view rqt_image_view
 
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
 ros2 control list_controllers
 
+#for headless use '-s' for server mode
+ign gazebo -v 4 simplecave3.sdf -s
 
 
 ros2 run rqt_image_view rqt_image_view

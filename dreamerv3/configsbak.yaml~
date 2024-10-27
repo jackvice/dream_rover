@@ -288,8 +288,8 @@ rover:
     dmc:
       image: True
     lidar: True
-    camera_topic: '/camera/image_raw'
-    #scan_topic: '/scan'
+    camer_topic: '/camera/image_raw'
+    scan_topic: '/scan'
     odom_topic: '/odometry/wheels'
     imu_topic: '/imu/data'
     cmd_vel_topic: '/cmd_vel'

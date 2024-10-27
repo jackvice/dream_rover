@@ -151,12 +151,16 @@ class Turtlebot(embodied.Env):
         }
 
     def step(self, action):
+        # Check if we need to reset the environment
         if action['reset'] or self._done:
             self._step = 0
             self._done = False
             return self._obs(0.0, is_first=True)
+        
+        # Increment total steps
         self.total_steps += 1
         
+        # Create and publish Twist message for robot movement
         twist = Twist()
         twist.linear.x = float(action['linear_velocity'])
         twist.angular.z = float(action['angular_velocity'])
@@ -169,7 +173,7 @@ class Turtlebot(embodied.Env):
         #time.sleep(0.1)
         time.sleep(0.03)
         
-
+        # Handle LIDAR data
         if self._robot_connected:
             # Wait for scan data only if robot is connected
             rclpy.spin_once(self.node, timeout_sec=0.1)
@@ -182,20 +186,25 @@ class Turtlebot(embodied.Env):
 
         # Calculate reward
         reward = self.get_reward()
+        
+        # Update highest and lowest rewards
         if reward > self.highest_reward:
             self.highest_reward = reward
-
         if reward < self.lowest_reward:
             self.lowest_reward = reward
             
+        # Print debug information every 1000 steps
         if self.total_steps % 1000 == 0:
             print('steps', self.total_steps,'highest reward',self.highest_reward,
                   'lowest reward',self.lowest_reward, 'current reward', reward)
             #print('lidar', self.lidar_data)
             print('Minimum lidar value:', np.nanmin(self.lidar_data))
 
+        # Increment step counter and check if episode is done
         self._step += 1
         self._done = (self._step >= self._length)
+        
+        # Return observation
         return self._obs(
             reward,
             is_last=self._done,
