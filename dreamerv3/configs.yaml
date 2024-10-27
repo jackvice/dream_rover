@@ -84,10 +84,9 @@ defaults:
     dmc: {size: [64, 64], repeat: 2, image: True, camera: -1}
     procgen: {size: [64, 64]}
     loconav: {size: [64, 64], repeat: 2, camera: -1}
-    rover: {size: [96, 96], repeat: 2, camera_topic: '/camera/image_raw', ...}
     rover: 
       size: [96, 96]  # Size of the input image, matches the resized camera image in your code
-      repeat: 2       # Number of repeated frames for stability in RL
+      repeat: 4       # Number of repeated frames for stability in RL
       camera_topic: '/camera/image_raw'  # Topic for camera images
       scan_topic: '/scan'  # Topic for LIDAR scan
       imu_topic: '/imu/data'  # Topic for IMU data
@@ -296,8 +295,10 @@ rover:
     connection_check_timeout: 30  # Wait 30 seconds for connection
     lidar_points: 640  # Set this to match your actual lidar configuration
     max_lidar_range: 12.0
-  enc.spaces: 'camera|lidar|odom|imu|goal'
-  dec.spaces: 'camera|lidar|odom|imu|goal'
+  #enc.spaces: 'camera|lidar|odom|imu|goal'
+  #dec.spaces: 'camera|lidar|odom|imu|goal'
+  enc.spaces: 'camera|odom|imu|goal' # no lidar
+  dec.spaces: 'camera|odom|imu|goal' # no lidar
   
   
 turtlebot:

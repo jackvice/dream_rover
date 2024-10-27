@@ -16,7 +16,7 @@ from transforms3d.euler import quat2euler
 
 
 class Rover(embodied.Env):
-    def __init__(self, task, size=(96, 96), length=200, scan_topic='/scan', imu_topic='/imu/data',
+    def __init__(self, task, size=(96, 96), repeat = 4, length=200, scan_topic='/scan', imu_topic='/imu/data',
                  cmd_vel_topic='/cmd_vel', odom_topic='/odometry/wheels', camera_topic='/camera/image_raw',
                  connection_check_timeout=30,
                  lidar_points=640, max_lidar_range=12.0):
@@ -58,6 +58,8 @@ class Rover(embodied.Env):
             self.camera_callback,
             10
         )
+        self.repeat = repeat
+        self.image_size = size
         self.current_image = None  # Store the current camera image
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
@@ -93,8 +95,91 @@ class Rover(embodied.Env):
         if not self._robot_connected:
             self.node.get_logger().warn("No actual robot detected. Running in simulation mode.")
 
-    
     def step(self, action):
+        """
+        Perform the specified action and return the new observation, reward, done flag, and additional info.
+        Adds the current 96x96 camera image to the observation.
+        
+        :param action: Action to perform.
+        :return: Tuple (observation, reward, done, info).
+        """
+        if action['reset'] or self._done:
+            self._step = 0
+            self._done = False
+            return self._obs(0.0, is_first=True)
+        self.total_steps += 1
+
+        total_reward = 0  # Initialize total reward for action repeat
+        for _ in range(self.repeat):
+            # **New Logic: Check for climbing and adjust movement with cooldown**
+            climbing_status, climbing_severity = self.is_climbing_wall()  # Modify function to return severity if needed
+            if climbing_status and self.steps_since_correction >= self.cooldown_steps:
+                # Execute corrective action instead of agent's action
+                twist = Twist()
+                if climbing_status == 'forward':
+                    # Execute a small reverse movement with angular correction
+                    twist.linear.x = -0.1  # Reduced reverse velocity
+                    twist.angular.z = -self.current_roll * 1.0  # Example angular correction
+                    self.node.get_logger().info(
+                        f"Step {self.total_steps}: Forward climb. doing reverse. angle{self.current_pitch}"
+                    )
+                elif climbing_status == 'reverse':
+                    # Execute a small forward movement with angular correction
+                    twist.linear.x = 0.1  # Reduced forward velocity
+                    twist.angular.z = self.current_roll * 1.0  # Example angular correction
+                    self.node.get_logger().info(
+                        f"Step {self.total_steps}: Reverse climb. doing forward. angle{self.current_pitch}"
+                    )
+                self.publisher.publish(twist)
+                # Reset cooldown
+                self.steps_since_correction = 0
+            else:
+                # Normal operation: publish agent's action twist
+                twist = Twist()
+                twist.linear.x = float(action['linear_velocity'])
+                twist.angular.z = float(action['angular_velocity'])
+                self.publisher.publish(twist)
+                # Store the last linear velocity for reward calculation
+                self.last_linear_velocity = twist.linear.x
+                # Increment cooldown counter
+                self.steps_since_correction += 1
+
+            # Process sensor data
+            if self._robot_connected:
+                rclpy.spin_once(self.node, timeout_sec=0.1)
+                if not self._received_scan:
+                    self.node.get_logger().warn("No scan data received")
+            else:
+                self.lidar_data = np.random.uniform(0.1, self.max_lidar_range,
+                                                    self.lidar_points).astype(np.float32)
+
+            # Calculate reward and accumulate it for each repeated step
+            reward = self.get_reward()
+            total_reward += reward
+
+            # Check if maximum steps have been reached
+            self._step += 1
+            if self._step >= self._length:
+                self._done = True
+                break  # Exit loop early if done
+
+        # Update highest and lowest rewards for logging
+        if total_reward > self.highest_reward:
+            self.highest_reward = total_reward
+        if total_reward < self.lowest_reward:
+            self.lowest_reward = total_reward
+        if self.total_steps % 1000 == 0:
+            print('steps', self.total_steps, 'highest reward', self.highest_reward,
+                  'lowest reward', self.lowest_reward, 'current reward', total_reward)
+            print('Minimum lidar value:', np.nanmin(self.lidar_data))
+
+        return self._obs(
+            total_reward,
+            is_last=self._done,
+            is_terminal=self._done)
+
+
+    def step_no_repeat(self, action):
         """
         Perform the specified action and return the new observation, reward, done flag, and additional info.
         Adds the current 96x96 camera image to the observation.
@@ -264,7 +349,7 @@ class Rover(embodied.Env):
             # Convert the ROS Image message to an OpenCV image
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             # Resize the image to 96x96
-            resized_image = cv2.resize(cv_image, size)
+            resized_image = cv2.resize(cv_image, self.image_size)
             # Store the resized image as the current observation
             self.current_image = resized_image
         except Exception as e:
@@ -311,7 +396,7 @@ class Rover(embodied.Env):
         """
         obs = {
             'camera_image': self.current_image if self.current_image is not None else np.zeros((96, 96, 3), dtype=np.uint8)
-            'lidar': self.lidar_data,
+            #'lidar': self.lidar_data,
             'odom': np.array(self.rover_position, dtype=np.float32),
             'imu': np.array([self.current_pitch, self.current_roll, self.current_yaw], dtype=np.float32),
             'goal': np.array(self.point_nav_point[self.point_num], dtype=np.float32),
@@ -323,24 +408,6 @@ class Rover(embodied.Env):
             is_terminal=is_terminal)
         return obs
     
-    def old_obs(self, reward, is_first=False, is_last=False, is_terminal=False):
-        obs = {
-            'lidar': self.lidar_data,
-            'odom': np.array(self.rover_position, dtype=np.float32),
-            'imu': np.array([self.current_pitch, self.current_roll, self.current_yaw], dtype=np.float32),
-            'goal': np.array(self.point_nav_point[self.point_num], dtype=np.float32),  # x, y tuple
-        }
-        obs.update(
-            reward=np.float32(reward),
-            is_first=is_first,
-            is_last=is_last,
-            is_terminal=is_terminal)
-        if self.total_steps % 10_000 == 0:
-            print('lidar length',len(obs['lidar']))
-            print(obs)
-            #exit()
-        return obs
-
 
     def imu_callback(self, msg):
         """
@@ -421,6 +488,7 @@ class Rover(embodied.Env):
     @property
     def obs_space(self):
         spaces = {
+            'camera_image': embodied.Space(np.uint8, (96, 96, 3)),
             'lidar': embodied.Space(np.float32, (self.lidar_points,)),
             'odom': embodied.Space(np.float32, (3,)),
             'imu': embodied.Space(np.float32, (3,)),
