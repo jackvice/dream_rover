@@ -252,8 +252,9 @@ def make_env(config, index, **overrides):
         "memmaze": lambda task, **kw: from_gym.FromGym(
             f"MemoryMaze-{task}-ExtraObs-v0", **kw
         ),
-        "turtlebot": "embodied.envs.turtlebot:Turtlebot",
-        "rover": "embodied.envs.rover_zero:Rover",
+        #"turtlebot": "embodied.envs.turtlebot:Turtlebot",
+        "rover": "embodied.envs.rover_camera:Rover",
+        #"rover": "embodied.envs.rover_zero:Rover",
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(":")

@@ -13,13 +13,25 @@ from nav_msgs.msg import Odometry
 from dreamerv3.utils import l2_distance
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from transforms3d.euler import quat2euler
+from sensor_msgs.msg import Image
 
 
 class Rover(embodied.Env):
-    def __init__(self, task, size=(96, 96), repeat = 4, length=200, scan_topic='/scan', imu_topic='/imu/data',
-                 cmd_vel_topic='/cmd_vel', odom_topic='/odometry/wheels', camera_topic='/camera/image_raw',
+    def __init__(self,
+                 task,
+                 size=(64, 64),
+                 shape=(64, 64, 3),
+                 repeat = 4,
+                 length=200, #episode length
+                 scan_topic='/scan',
+                 imu_topic='/imu/data',
+                 cmd_vel_topic='/cmd_vel',
+                 odom_topic='/odometry/wheels',
+                 camera_topic='/camera/image_raw',
                  connection_check_timeout=30,
-                 lidar_points=640, max_lidar_range=12.0):
+                 lidar_points=640,
+                 max_lidar_range=12.0,
+                 environment_type='simualtion'):
         super().__init__()
         rclpy.init()
         self.bridge = CvBridge() 
@@ -53,13 +65,14 @@ class Rover(embodied.Env):
         )
         
         self.camera_subscriber = self.node.create_subscription(
-            Camera,
+            Image,
             camera_topic,
             self.camera_callback,
             10
         )
         self.repeat = repeat
         self.image_size = size
+        self.image_shape = shape
         self.current_image = None  # Store the current camera image
         self.lidar_points = lidar_points
         self.max_lidar_range = max_lidar_range
@@ -98,7 +111,7 @@ class Rover(embodied.Env):
     def step(self, action):
         """
         Perform the specified action and return the new observation, reward, done flag, and additional info.
-        Adds the current 96x96 camera image to the observation.
+        Adds the current 64x64 camera image to the observation.
         
         :param action: Action to perform.
         :return: Tuple (observation, reward, done, info).
@@ -395,7 +408,7 @@ class Rover(embodied.Env):
         :return: The current observation.
         """
         obs = {
-            'camera_image': self.current_image if self.current_image is not None else np.zeros((96, 96, 3), dtype=np.uint8)
+            'camera_image': self.current_image if self.current_image is not None else np.zeros(self.image_shape, dtype=np.uint8),
             #'lidar': self.lidar_data,
             'odom': np.array(self.rover_position, dtype=np.float32),
             'imu': np.array([self.current_pitch, self.current_roll, self.current_yaw], dtype=np.float32),
@@ -488,8 +501,8 @@ class Rover(embodied.Env):
     @property
     def obs_space(self):
         spaces = {
-            'camera_image': embodied.Space(np.uint8, (96, 96, 3)),
-            'lidar': embodied.Space(np.float32, (self.lidar_points,)),
+            'camera_image': embodied.Space(np.uint8, self.image_shape),
+            #'lidar': embodied.Space(np.float32, (self.lidar_points,)),
             'odom': embodied.Space(np.float32, (3,)),
             'imu': embodied.Space(np.float32, (3,)),
             'goal': embodied.Space(np.float32, (2,)),

@@ -1,5 +1,7 @@
 # Dream Rover commands:
 
+python dreamerv3/main.py --configs rover --logdir ~/logdir/r_camera_test
+
 python dreamerv3/main.py --configs rover --logdir ~/logdir/rover
 
 python dreamerv3/main.py --configs turtlebot --logdir ~/logdir/turtlebot
@@ -16,6 +18,11 @@ ros2 launch roverrobotics_gazebo 4wd_rover_gazebo.launch.py
 
 ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
 
+
+# metrics logger in ~/rover_workspace/rover_metrics/
+ros2 run rover_metrics metrics_node
+
+
 #rviz2:  'Fixed Frame' set to lidar_link
 ros2 run rviz2 rviz2
 
@@ -27,6 +34,12 @@ ros2 control list_controllers
 
 #for headless use '-s' for server mode
 ign gazebo -v 4 simplecave3.sdf -s
+
+# to open an sdf, first start gazebo with empty then run the ign command
+jack@HAL:~/worlds$ ign gazebo empty.sdf
+ign service -s /world/empty/create --reqtype ignition.msgs.EntityFactory --reptype ignition.msgs.Boolean --timeout 10000 --req 'sdf_filename: "/home/jack/worlds/harmonic/h_terrain/model.sdf"'
+
+
 
 
 ros2 run rqt_image_view rqt_image_view
